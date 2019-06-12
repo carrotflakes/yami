@@ -14,7 +14,9 @@
   :depends-on ()
   :components ((:module "src"
                 :components
-                ((:file "yami"))))
+                ((:file "yami" :depends-on ("data" "find"))
+                 (:file "find" :depends-on ("data"))
+                 (:file "data"))))
   :description ""
   :long-description
   #.(read-file-string
