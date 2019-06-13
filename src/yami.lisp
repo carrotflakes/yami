@@ -2,6 +2,8 @@
   (:use :cl
         :yami.data
         :yami.find)
+  (:import-from :yami.commands
+                :build)
   (:export :a
            :e
            :with-find
@@ -10,3 +12,5 @@
 (in-package :yami)
 
 (defvar root (a "root"))
+
+(print (build "add 'hoge' 'fuga' 'piyo';"))

@@ -11,11 +11,13 @@
   :version "0.1.0"
   :author "carrotflakes"
   :license "LLGPL"
-  :depends-on ()
+  :depends-on ("snaky")
   :components ((:module "src"
                 :components
-                ((:file "yami" :depends-on ("data" "find"))
+                ((:file "yami" :depends-on ("data" "find" "commands"))
                  (:file "find" :depends-on ("data"))
+                 (:file "commands" :depends-on ("parser"))
+                 (:file "parser")
                  (:file "data"))))
   :description ""
   :long-description
