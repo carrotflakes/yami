@@ -1,15 +1,30 @@
 (defpackage yami.sym
-  (:use :cl
-        :yami.data
-        :yami.find)
-  (:import-from :yami.commands
-                :build)
-  (:export :a
-           :e
-           :with-find
-           :find-all
-           :root))
+  (:use :cl)
+  (:import-from :md5
+                :md5sum-sequence
+                :md5sum-string)
+  (:export :sym
+           :sym=
+           :sym-id
+           :sym-secret
+           :sym-authorized
+           :name-sym
+           :new-sym
+           :sym-string
+           :string-sym
+           :sym-auth
+           :array=))
 (in-package :yami.sym)
+
+(defparameter +key+ (md5sum-string "yamikey"))
+
+(defun array= (v1 v2)
+  (and (= (length v1) (length v2))
+       (loop
+         for i below (length v1)
+         unless (= (aref v1 i) (aref v2 i))
+         do (return nil)
+         finally (return t))))
 
 (defstruct sym
   id
@@ -17,22 +32,20 @@
   secret
   (authorized nil))
 
+(defun sym= (s1 s2)
+  (array= (sym-id s1) (sym-id s2)))
+
 (defun concat (x y)
   (concatenate '(SIMPLE-ARRAY (UNSIGNED-BYTE 8) (*)) x y))
 
-(defconstant +key+ (md5:md5sum-string "yamikey"))
-
 (defun make-check (id)
-  (subseq (md5:md5sum-sequence (concat id +key+)) 0 8))
+  (subseq (md5sum-sequence (concat id +key+)) 0 8))
 
 (defun secret-id (secret)
-  (md5:md5sum-sequence (concat secret +key+)))
+  (md5sum-sequence (concat secret +key+)))
 
-(defun new-sym (&optional secret)
-  (let* ((secret-string (format nil "yami/~a/~a"
-                                (get-universal-time)
-                                (get-internal-real-time)))
-         (secret-md5 (md5:md5sum-string secret-string))
+(defun name-sym (name &optional secret)
+  (let* ((secret-md5 (md5sum-string (concatenate 'string name "/yami")))
          (id-md5 (secret-id secret-md5)))
     (setf (aref id-md5 0) (if secret
                               (logior (aref id-md5 0) #b10000000)
@@ -41,18 +54,16 @@
               :check (make-check id-md5)
               :secret (and secret secret-md5))))
 
+(defun new-sym (&optional secret)
+  (name-sym (format nil "yami/~a/~a"
+                    (get-universal-time)
+                    (get-internal-real-time))
+            secret))
+
 (defun sym-string (sym)
   (format nil "~(~{~2,'0x~}~)"
           (nconc (coerce (sym-id sym) 'list)
                  (coerce (sym-check sym) 'list))))
-
-(defun vector= (v1 v2)
-  (and (= (length v1) (length v2))
-       (loop
-         for i below (length v1)
-         unless (= (aref v1 i) (aref v2 i))
-         do (return nil)
-         finally (return t))))
 
 (defun string-sym (string)
   (assert (stringp string))
@@ -65,13 +76,13 @@
                          for i from 32 below 48 by 2
                          collect (parse-integer string :start i :end (+ i 2) :radix 16))
                        '(SIMPLE-ARRAY (UNSIGNED-BYTE 8) (8)))))
-    (assert (vector= check (make-check id)))
+    (assert (array= check (make-check id)))
     (make-sym :id id
               :check check
               :secret (not (zerop (logand (aref id 0) #b10000000))))))
 
 (defun sym-auth (sym secret)
-  (setf (sym-authorized sym) (vector= (secret-id secret) (sym-id sym))))
+  (setf (sym-authorized sym) (array= (secret-id secret) (sym-id sym))))
 
 (let* ((sym (new-sym nil))
        (str (sym-string sym))

@@ -38,15 +38,25 @@
     (return-from run-commands))
   (let ((command (pop commands)))
     (case (first command)
-      (:common )
-      (:var )
-      (:unlock )
-      (:symbol )
-      (:add )
-      (:rm )
-      (:find1 )
-      (:findSome )
-      (:findAll )
-      (:collect ))))
-
-; common var unlock symbol add rm find1 findSome findAll collect
+      (:common
+       ;(run-commands request commands (nconc () bindings))
+      (:var
+       )
+      (:unlock
+       )
+      (:symbol
+       )
+      (:locked
+       )
+      (:add
+       )
+      (:rm
+       )
+      (:find1
+       )
+      (:findSome
+       )
+      (:findAll
+       )
+      (:collect
+       ))))

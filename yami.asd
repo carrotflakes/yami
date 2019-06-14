@@ -16,9 +16,10 @@
                 :components
                 ((:file "yami" :depends-on ("data" "find" "commands"))
                  (:file "find" :depends-on ("data"))
-                 (:file "commands" :depends-on ("parser"))
+                 (:file "commands" :depends-on ("parser" "sym"))
                  (:file "parser")
-                 (:file "data"))))
+                 (:file "data")
+                 (:file "sym"))))
   :description ""
   :long-description
   #.(read-file-string

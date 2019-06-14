@@ -4,16 +4,15 @@
   (:export :parse))
 (in-package :yami.parser)
 
-; TODO: get secret
-
 (defrule query
-  (many commands))
+  (@ (many commands)))
 
 (defrule commands
   (@ (or common
          var
          unlock
          symbol-command
+         locked
          add
          rm
          find
@@ -31,6 +30,9 @@
 (defrule symbol-command
   (and (cap "symbol") ws (many variable) ws ";"))
 
+(defrule locked
+  (and (cap "locked") ws variable ws variable ws ";"))
+
 (defrule add
   (and (cap "add") ws item ws item ws item ws ";"))
 
@@ -38,7 +40,7 @@
   (and (cap "rm") ws item ws item ws item ws ";"))
 
 (defrule find
-  (and (cap "find" (or "" "1" "Some" "All")) ws item ws item ws item ws ";"))
+  (and (cap (or "find" "find1" "findSome" "findAll")) ws item ws item ws item ws ";"))
 
 (defrule collect
   (and (cap "collect") ws (many item) ws ";"))
@@ -73,7 +75,7 @@
 
 (defrule ws (grp "whitespace" (* (cc #.(format nil " ~a~a~a" #\cr #\lf #\tab)))))
 
-(defrule (many x) (@ (? (and x (* (and ws x))))))
+(defrule (many x) (? (and x (* (and ws x)))))
 
 
 (defparser parse (and ws query ws))
