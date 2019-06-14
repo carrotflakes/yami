@@ -79,5 +79,3 @@
 
 
 (defparser parse (and ws query ws))
-
-(print (parse "common x y; var z :a; var foo 'foo'; add x y z; collect z;"))

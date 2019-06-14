@@ -1,14 +1,12 @@
 (defpackage yami.commands
   (:use :cl)
-  (:import-from :yami.parser
-                :parse)
   (:import-from :yami.sym
                 :string-sym)
-  (:export :build
-           :svar
+  (:export :svar
            :svar-p
            :svar-name
-           :svar-value))
+           :svar-value
+           :generate-code))
 (in-package :yami.commands)
 
 (defstruct svar
@@ -26,11 +24,9 @@
     (:string (second form))
     (:symbol (string-sym (second form)))))
 
-(defun build (source)
+(defun generate-code (ast)
   (loop
     with *bindings* = '()
-    for (command . args) in (parse source)
+    for (command . args) in ast
     collect (cons (intern (string-upcase command) :keyword)
                   (mapcar #'value args))))
-
-(print (build "common x y; var z :018ead2588caa60f206a914558a8f758250650771a4632f2; add x y z; collect z;"))

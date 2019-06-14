@@ -1,10 +1,12 @@
 (defpackage yami
   (:use :cl)
+  (:import-from :yami.parser
+                :parse)
   (:import-from :yami.commands
-                :build
                 :svar-p
                 :svar-name
-                :svar-value)
+                :svar-value
+                :generate-code)
   (:import-from :yami.sym
                 :sym
                 :name-sym
@@ -16,10 +18,11 @@
                 :add
                 :rm
                 :finde)
-  (:export ))
+  (:export :query-code
+           :run-commands))
 (in-package :yami)
 
-
+#|
 (defstruct request
   paid-calorie
   remain-calorie
@@ -38,6 +41,10 @@
                           :source source))
 (defvar state (make-state :request req
                           :commands (build (request-source req))))
+|#
+
+(defun query-code (source)
+  (generate-code (parse source)))
 
 (defun resolve (form)
   (if (svar-p form)
@@ -128,39 +135,3 @@
                  for x in (cdr command)
                  collect (stringify (resolve x))))
        (run-commands request commands)))))
-
-(print "+++++++++++++++++++")(terpri)
-(run-commands nil (build "
-common a b c;
-var x a;
-var y 'aaa';
-collect x y c;
-locked l s;
-add a b c;
-add 'a' 'b' 'c';
-rm a b c;
-collect l s;
-"))
-(print "+++++++++++++++++++")
-
-(print yami.store::*edges*)
-
-
-(print "+++++++++++++++++++")(terpri)
-(run-commands nil (build "
-add 'has' 'root' 'users';
-add 'has' 'users' 'carrotflakes';
-add 'has' 'root' 'food';
-add 'has' 'food' 'ramen';
-add 'has' 'food' 'udon';
-add 'has' 'food' 'soba';
-add 'has' 'food' 'takuan';
-
-findAll 'has' 'food' x;
-collect x;
-
-add 'like' 'carrotflakes' x;
-"))
-(print "+++++++++++++++++++")
-
-(print yami.store::*edges*)
