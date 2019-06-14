@@ -3,7 +3,9 @@
   (:import-from :md5
                 :md5sum-sequence
                 :md5sum-string)
-  (:export :sym
+  (:export :array=
+           :sym
+           :sym-p
            :sym=
            :sym-id
            :sym-secret
@@ -13,7 +15,6 @@
            :sym-string
            :string-sym
            :sym-auth
-           :array=
            :sym-secret-string))
 (in-package :yami.sym)
 
@@ -41,7 +42,7 @@
   id
   check
   secret
-  (authorized nil))
+  authorized)
 
 (defun sym= (s1 s2)
   (array= (sym-id s1) (sym-id s2)))
@@ -63,7 +64,8 @@
                               (logand (aref id-md5 0) #b01111111)))
     (make-sym :id id-md5
               :check (make-check id-md5)
-              :secret (and secret secret-md5))))
+              :secret (and secret secret-md5)
+              :authorized t)))
 
 (defun sym-secret-string (sym)
   (array-string (sym-secret sym)))
@@ -82,18 +84,20 @@
 (defun string-sym (string)
   (assert (stringp string))
   (assert (= (length string) 48))
-  (let ((id (coerce (loop
-                      for i below 32 by 2
-                      collect (parse-integer string :start i :end (+ i 2) :radix 16))
-                    '(SIMPLE-ARRAY (UNSIGNED-BYTE 8) (16))))
-        (check (coerce (loop
-                         for i from 32 below 48 by 2
-                         collect (parse-integer string :start i :end (+ i 2) :radix 16))
-                       '(SIMPLE-ARRAY (UNSIGNED-BYTE 8) (8)))))
+  (let* ((id (coerce (loop
+                       for i below 32 by 2
+                       collect (parse-integer string :start i :end (+ i 2) :radix 16))
+                     '(SIMPLE-ARRAY (UNSIGNED-BYTE 8) (16))))
+         (check (coerce (loop
+                          for i from 32 below 48 by 2
+                          collect (parse-integer string :start i :end (+ i 2) :radix 16))
+                        '(SIMPLE-ARRAY (UNSIGNED-BYTE 8) (8))))
+         (secret (not (zerop (logand (aref id 0) #b10000000)))))
     (assert (array= check (make-check id)))
     (make-sym :id id
               :check check
-              :secret (not (zerop (logand (aref id 0) #b10000000))))))
+              :secret secret
+              :authorized (not secret))))
 
 (defun sym-auth (sym secret)
   (setf (sym-authorized sym)

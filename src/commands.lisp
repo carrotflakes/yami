@@ -4,17 +4,31 @@
                 :parse)
   (:import-from :yami.sym
                 :string-sym)
-  (:export :build))
+  (:export :build
+           :svar
+           :svar-p
+           :svar-name
+           :svar-value))
 (in-package :yami.commands)
+
+(defstruct svar
+  name
+  (value nil))
+
+(defvar *bindings*)
 
 (defun value (form)
   (ecase (first form)
-    (:variable (intern (second form) :keyword))
+    (:variable (or (cdr (assoc (second form) *bindings* :test #'string=))
+                   (let ((svar (make-svar :name (second form))))
+                     (push (cons (second form) svar) *bindings*)
+                     svar)))
     (:string (second form))
     (:symbol (string-sym (second form)))))
 
 (defun build (source)
   (loop
+    with *bindings* = '()
     for (command . args) in (parse source)
     collect (cons (intern (string-upcase command) :keyword)
                   (mapcar #'value args))))

@@ -7,7 +7,7 @@
 ;; NOTE: To run this test file, execute `(asdf:test-system :yami)' in your Lisp.
 
 (plan nil)
-
+#|
 (defvar has (a 'has))
 (defvar foods (a 'foods))
 (defvar types (a 'types))
@@ -26,5 +26,5 @@
   (e has root v1)
   (find-all
    (lambda () (print v1))))
-
+|#
 (finalize)

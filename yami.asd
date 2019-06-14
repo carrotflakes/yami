@@ -14,11 +14,10 @@
   :depends-on ("md5" "snaky")
   :components ((:module "src"
                 :components
-                ((:file "yami" :depends-on ("data" "find" "commands"))
-                 (:file "find" :depends-on ("data"))
+                ((:file "yami" :depends-on ("commands" "store"))
                  (:file "commands" :depends-on ("parser" "sym"))
                  (:file "parser")
-                 (:file "data")
+                 (:file "store")
                  (:file "sym"))))
   :description ""
   :long-description
