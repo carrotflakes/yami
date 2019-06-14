@@ -15,7 +15,7 @@
   (:import-from :yami.store
                 :add
                 :rm
-                :find1)
+                :finde)
   (:export ))
 (in-package :yami)
 
@@ -41,7 +41,7 @@
 
 (defun resolve (form)
   (if (svar-p form)
-      (svar-value form)
+      (or (svar-value form) form)
       form))
 
 (defun stringify (value)
@@ -95,21 +95,41 @@
            (resolve (fourth command)))
        (run-commands request commands))
       (:find1
-       (find1 1
-              (resolve (second command))
-              (resolve (third command))
-              (resolve (fourth command)))
-       (run-commands request commands))
+       (let ((label (resolve (second command)))
+             (left (resolve (third command)))
+             (right (resolve (fourth command))))
+         (loop
+           for edge in (finde 1 label left right)
+           do (when (svar-p label) (setf (svar-value label) (first edge)))
+              (when (svar-p left) (setf (svar-value left) (second edge)))
+              (when (svar-p right) (setf (svar-value right) (third edge)))
+              (run-commands request commands)
+              (when (svar-p label) (setf (svar-value label) nil))
+              (when (svar-p left) (setf (svar-value left) nil))
+              (when (svar-p right) (setf (svar-value right) nil)))))
       (:findSome
        )
       (:findAll
-       )
+       (let ((label (resolve (second command)))
+             (left (resolve (third command)))
+             (right (resolve (fourth command))))
+         (loop
+           for edge in (finde 10000000 label left right)
+           do (when (svar-p label) (setf (svar-value label) (first edge)))
+              (when (svar-p left) (setf (svar-value left) (second edge)))
+              (when (svar-p right) (setf (svar-value right) (third edge)))
+              (run-commands request commands)
+              (when (svar-p label) (setf (svar-value label) nil))
+              (when (svar-p left) (setf (svar-value left) nil))
+              (when (svar-p right) (setf (svar-value right) nil)))))
       (:collect
-       (print (loop
-                for x in (cdr command)
-                collect (stringify (resolve x))))
+       (format t "~{~a~^ ~};~%"
+               (loop
+                 for x in (cdr command)
+                 collect (stringify (resolve x))))
        (run-commands request commands)))))
 
+(print "+++++++++++++++++++")(terpri)
 (run-commands nil (build "
 common a b c;
 var x a;
@@ -119,6 +139,28 @@ locked l s;
 add a b c;
 add 'a' 'b' 'c';
 rm a b c;
-collect l s;"))
+collect l s;
+"))
+(print "+++++++++++++++++++")
+
+(print yami.store::*edges*)
+
+
+(print "+++++++++++++++++++")(terpri)
+(run-commands nil (build "
+add 'has' 'root' 'users';
+add 'has' 'users' 'carrotflakes';
+add 'has' 'root' 'food';
+add 'has' 'food' 'ramen';
+add 'has' 'food' 'udon';
+add 'has' 'food' 'soba';
+add 'has' 'food' 'takuan';
+
+findAll 'has' 'food' x;
+collect x;
+
+add 'like' 'carrotflakes' x;
+"))
+(print "+++++++++++++++++++")
 
 (print yami.store::*edges*)

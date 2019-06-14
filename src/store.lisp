@@ -13,7 +13,7 @@
                 :svar-value)
   (:export :add
            :rm
-           :find1))
+           :finde))
 (in-package :yami.store)
 
 (defvar *edges* '())
@@ -22,7 +22,8 @@
 ;  )
 
 (defun e (x y)
-  (if (and (arrayp x) (arrayp y))
+  (if (and (typep x '(simple-array (unsigned-byte 8) (*)))
+           (typep y '(simple-array (unsigned-byte 8) (*))))
       (array= x y)
       (equal x y)))
 
@@ -36,7 +37,7 @@
   (etypecase x
     (string x)
     (sym (sym-id x))
-    (keyword x)))
+    (svar x)))
 
 (defun add (label left right)
   ; TODO: ensure authorized, duplication check
@@ -51,11 +52,16 @@
   (setf *edges* (remove (list label left right) *edges* :test #'ee))
   (values))
 
-(defun find1 (n label left right)
+(defun finde (n label left right)
   (setf label (clean label)
         left (clean left)
         right (clean right))
-  '(loop
+  (loop
+    while (plusp n)
     for edge in *edges*
-    when nil
-    do label))
+    when (and (or (svar-p label) (e label (first edge)))
+              (or (svar-p left) (e left (second edge)))
+              (or (svar-p right) (e right (third edge))))
+    collect (progn
+              (decf n)
+              edge)))
