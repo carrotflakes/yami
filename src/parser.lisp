@@ -38,7 +38,7 @@
   (and (cap "rm") ws item ws item ws item ws ";"))
 
 (defrule find
-  (and (cap "find") ws item ws item ws item ws ";"))
+  (and (cap "find" (or "" "1" "Some" "All")) ws item ws item ws item ws ";"))
 
 (defrule collect
   (and (cap "collect") ws (many item) ws ";"))

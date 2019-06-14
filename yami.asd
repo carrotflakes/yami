@@ -11,7 +11,7 @@
   :version "0.1.0"
   :author "carrotflakes"
   :license "LLGPL"
-  :depends-on ("snaky")
+  :depends-on ("md5" "snaky")
   :components ((:module "src"
                 :components
                 ((:file "yami" :depends-on ("data" "find" "commands"))

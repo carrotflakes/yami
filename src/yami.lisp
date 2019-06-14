@@ -13,4 +13,40 @@
 
 (defvar root (a "root"))
 
-(print (build "add 'hoge' 'fuga' 'piyo';"))
+(defstruct request
+  paid-calorie
+  remain-calorie
+  source
+  (output nil))
+
+(defstruct state
+  request
+  (bindings nil)
+  commands)
+
+
+(defvar source "add 'hoge' 'fuga' 'piyo';")
+(defvar req (make-request :paid-calorie 100
+                          :remain-calorie 100
+                          :source source))
+(defvar state (make-state :request req
+                          :commands (build (request-source req))))
+
+
+(defun run-commands (request commands &optional bindings)
+  (unless commands
+    (return-from run-commands))
+  (let ((command (pop commands)))
+    (case (first command)
+      (:common )
+      (:var )
+      (:unlock )
+      (:symbol )
+      (:add )
+      (:rm )
+      (:find1 )
+      (:findSome )
+      (:findAll )
+      (:collect ))))
+
+; common var unlock symbol add rm find1 findSome findAll collect
