@@ -12,6 +12,7 @@
            :sym-authorized
            :name-sym
            :new-sym
+           :id-sym
            :sym-string
            :string-sym
            :sym-auth
@@ -70,11 +71,21 @@
 (defun sym-secret-string (sym)
   (array-string (sym-secret sym)))
 
+(defvar *sym-count* 0)
+
 (defun new-sym (&optional secret)
-  (name-sym (format nil "yami/~a/~a"
+  (name-sym (format nil "yami/~a/~a/~a"
                     (get-universal-time)
-                    (get-internal-real-time))
+                    (get-internal-real-time)
+                    (incf *sym-count*))
             secret))
+
+(defun id-sym (id)
+  (let ((secret (not (zerop (logand (aref id 0) #b10000000)))))
+    (make-sym :id id
+              :check (make-check id)
+              :secret secret
+              :authorized (not secret))))
 
 (defun sym-string (sym)
   (format nil "~(~{~2,'0x~}~)"

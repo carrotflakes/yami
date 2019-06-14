@@ -4,6 +4,7 @@
                 :array=
                 :sym
                 :sym-id
+                :id-sym
                 :sym-authorized
                 :sym-string
                 :sym-secret-string)
@@ -32,6 +33,11 @@
       (and (e (first x) (first y))
            (e (second x) (second y))
            (e (third x) (third y)))))
+
+(defun ensure-sym (x)
+  (if (typep x '(simple-array (unsigned-byte 8) (*)))
+      (id-sym x)
+      x))
 
 (defun clean (x)
   (etypecase x
@@ -64,4 +70,4 @@
               (or (svar-p right) (e right (third edge))))
     collect (progn
               (decf n)
-              edge)))
+              (mapcar #'ensure-sym edge))))
