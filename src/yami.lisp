@@ -4,6 +4,13 @@
         :yami.find)
   (:import-from :yami.commands
                 :build)
+  (:import-from :yami.sym
+                :sym
+                :name-sym
+                :new-sym
+                :sym-auth
+                :sym-string
+                :sym-secret-string)
   (:export :a
            :e
            :with-find
@@ -32,6 +39,15 @@
 (defvar state (make-state :request req
                           :commands (build (request-source req))))
 
+(defun resolve (form bindings)
+  (if (keywordp form)
+      (cdr (assoc form bindings))
+      form))
+
+(defun stringify (value)
+  (etypecase value
+    (string (write-to-string value))
+    (sym (concatenate 'string ":" (sym-string value)))))
 
 (defun run-commands (request commands &optional bindings)
   (unless commands
@@ -39,15 +55,29 @@
   (let ((command (pop commands)))
     (case (first command)
       (:common
-       ;(run-commands request commands (nconc () bindings))
+       (setf bindings
+             (nconc (mapcar (lambda (v) (cons v (name-sym (symbol-name v))))
+                            (cdr command))
+                    bindings))
+       (run-commands request commands bindings))
       (:var
-       )
+       (push (cons (second command) (resolve (third command) bindings))
+             bindings)
+       (run-commands request commands bindings))
       (:unlock
-       )
+       (sym-auth (resolve (second command) bindings) (third command))
+       (run-commands request commands bindings))
       (:symbol
-       )
+       (setf bindings
+             (nconc (mapcar (lambda (v) (cons v (new-sym)))
+                            (cdr command))
+                    bindings))
+       (run-commands request commands bindings))
       (:locked
-       )
+       (let ((sym (new-sym t)))
+         (push (cons (second command) sym) bindings)
+         (push (cons (third command) (sym-secret-string sym)) bindings))
+       (run-commands request commands bindings))
       (:add
        )
       (:rm
@@ -59,4 +89,15 @@
       (:findAll
        )
       (:collect
-       ))))
+       (print (loop
+                for x in (cdr command)
+                collect (stringify (resolve x bindings))))
+       (run-commands request commands bindings)))))
+
+(run-commands nil (build "
+common a b c;
+var x a;
+var y 'aaa';
+collect x y c;
+locked l s;
+collect l s;"))

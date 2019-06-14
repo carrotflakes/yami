@@ -22,7 +22,7 @@
   (and (cap "common") ws (many variable) ws ";"))
 
 (defrule var
-  (and (cap "var") ws variable ws (or symbol string) ws ";"))
+  (and (cap "var") ws variable ws item ws ";"))
 
 (defrule unlock
   (and (cap "unlock") ws variable ws string ws ";"))
@@ -80,4 +80,4 @@
 
 (defparser parse (and ws query ws))
 
-(print (parse "common x y; var z :a; add x y z; collect z;"))
+(print (parse "common x y; var z :a; var foo 'foo'; add x y z; collect z;"))

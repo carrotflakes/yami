@@ -13,7 +13,8 @@
            :sym-string
            :string-sym
            :sym-auth
-           :array=))
+           :array=
+           :sym-secret-string))
 (in-package :yami.sym)
 
 (defparameter +key+ (md5sum-string "yamikey"))
@@ -25,6 +26,16 @@
          unless (= (aref v1 i) (aref v2 i))
          do (return nil)
          finally (return t))))
+
+(defun array-string (array)
+  (format nil "~(~{~2,'0x~}~)"
+          (coerce array 'list)))
+
+(defun string-array (string)
+  (coerce (loop
+            for i below (length string) by 2
+            collect (parse-integer string :start i :end (+ i 2) :radix 16))
+          '(SIMPLE-ARRAY (UNSIGNED-BYTE 8) (*))))
 
 (defstruct sym
   id
@@ -54,6 +65,9 @@
               :check (make-check id-md5)
               :secret (and secret secret-md5))))
 
+(defun sym-secret-string (sym)
+  (array-string (sym-secret sym)))
+
 (defun new-sym (&optional secret)
   (name-sym (format nil "yami/~a/~a"
                     (get-universal-time)
@@ -82,7 +96,9 @@
               :secret (not (zerop (logand (aref id 0) #b10000000))))))
 
 (defun sym-auth (sym secret)
-  (setf (sym-authorized sym) (array= (secret-id secret) (sym-id sym))))
+  (setf (sym-authorized sym)
+        (array= (secret-id (string-array secret))
+                (sym-id sym))))
 
 (let* ((sym (new-sym nil))
        (str (sym-string sym))
@@ -97,5 +113,5 @@
   (print sym)
   (print str)
   (print sym*)
-  (print (sym-auth sym* #(0 0 0 0 0 0 0 0 0 0 0 0 0 0 0 0)))
-  (print (sym-auth sym* (sym-secret sym))))
+  (print (sym-auth sym* (array-string #(0 0 0 0 0 0 0 0 0 0 0 0 0 0 0 0))))
+  (print (sym-auth sym* (sym-secret-string sym))))
