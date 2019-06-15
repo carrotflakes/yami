@@ -32,10 +32,12 @@
     (loop
       for form = (read stream nil)
       while form
-      do (apply (cond ((string= (car form) "+") #'add)
-                      ((string= (car form) "-") #'rm))
-                (mapcar (lambda (x) (if (typep x 'keyword) (string-sym (symbol-name x)) x))
-                        (cdr form)))))
+      for args = (mapcar (lambda (x) (if (typep x 'keyword) (string-sym (symbol-name x)) x))
+                         (cdr form))
+      do (cond ((string= (car form) "+")
+                (apply #'add args))
+               ((string= (car form) "-")
+                (setf *edges* (delete args *edges* :test #'ee))))))
   (setf *change-log-stream* (open path
                                   :direction :output
                                   :element-type 'base-char
@@ -68,11 +70,12 @@
   (push-change-log (list '+ label left right))
   (values))
 
-(defun rm (label left right)
-  ; TODO: holed edge
-  (setf *edges* (remove (list label left right) *edges* :test #'ee))
-  (push-change-log (list '- label left right))
-  (values))
+(defun rm (n label left right)
+  (let ((result (finde n label left right)))
+    (setf *edges* (set-difference *edges* result :test #'ee))
+    (dolist (edge result)
+      (push-change-log (list* '- edge)))
+    result))
 
 (defun finde (n label left right)
   (loop

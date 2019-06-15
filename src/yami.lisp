@@ -59,6 +59,17 @@
     (string (write-to-string value))
     (sym (concatenate 'string ":" (sym-string value)))))
 
+(defmacro aux (form)
+  `(loop
+     for edge in ,form
+     do (when (svar-p label) (setf (svar-value label) (first edge)))
+        (when (svar-p left) (setf (svar-value left) (second edge)))
+        (when (svar-p right) (setf (svar-value right) (third edge)))
+        (run-commands request commands)
+        (when (svar-p label) (setf (svar-value label) nil))
+        (when (svar-p left) (setf (svar-value left) nil))
+        (when (svar-p right) (setf (svar-value right) nil))))
+
 (defun run-commands (request commands)
   (unless commands
     (return-from run-commands))
@@ -100,42 +111,37 @@
             (resolve (third command))
             (resolve (fourth command))) ; TODO ensure no variable
        (run-commands request commands))
-      (:rm ; rm 1, 5, all
-       (rm (resolve (second command))
-           (resolve (third command))
-           (resolve (fourth command)))
-       (run-commands request commands))
+      (:rm
+       (let ((label (second command))
+             (left (third command))
+             (right (fourth command)))
+         (aux (rm 1
+                  (resolve (second command))
+                  (resolve (third command))
+                  (resolve (fourth command))))))
+      (:rmAll
+       (let ((label (second command))
+             (left (third command))
+             (right (fourth command)))
+         (aux (rm 10000000
+                  (resolve (second command))
+                  (resolve (third command))
+                  (resolve (fourth command))))))
       (:find1
        (let ((label (resolve (second command)))
              (left (resolve (third command)))
              (right (resolve (fourth command))))
-         (loop
-           for edge in (finde 1 label left right)
-           do (when (svar-p label) (setf (svar-value label) (first edge)))
-              (when (svar-p left) (setf (svar-value left) (second edge)))
-              (when (svar-p right) (setf (svar-value right) (third edge)))
-              (run-commands request commands)
-              (when (svar-p label) (setf (svar-value label) nil))
-              (when (svar-p left) (setf (svar-value left) nil))
-              (when (svar-p right) (setf (svar-value right) nil)))))
+         (aux (finde 1 label left right))))
       (:findSome
        )
       (:findAll
        (let ((label (resolve (second command)))
              (left (resolve (third command)))
              (right (resolve (fourth command))))
-         (loop
-           for edge in (finde 10000000 label left right)
-           do (when (svar-p label) (setf (svar-value label) (first edge)))
-              (when (svar-p left) (setf (svar-value left) (second edge)))
-              (when (svar-p right) (setf (svar-value right) (third edge)))
-              (run-commands request commands)
-              (when (svar-p label) (setf (svar-value label) nil))
-              (when (svar-p left) (setf (svar-value left) nil))
-              (when (svar-p right) (setf (svar-value right) nil)))))
+         (aux (finde 10000000 label left right))))
       (:collect
        (format t "~{~a~^ ~};~%"
                (loop
                  for x in (cdr command)
-                 collect (stringify (resolve x))))
+                 collect (stringify (resolve x)))) ; svar渡ってくる問題
        (run-commands request commands)))))
