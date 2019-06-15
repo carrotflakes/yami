@@ -1,13 +1,8 @@
 (defpackage yami.store
   (:use :cl)
   (:import-from :yami.sym
-                :array=
-                :sym
-                :sym-id
-                :id-sym
-                :sym-authorized
-                :sym-string
-                :sym-secret-string)
+                :sym=
+                :sym)
   (:import-from :yami.commands
                 :svar
                 :svar-p
@@ -23,9 +18,9 @@
 ;  )
 
 (defun e (x y)
-  (if (and (typep x '(simple-array (unsigned-byte 8) (*)))
-           (typep y '(simple-array (unsigned-byte 8) (*))))
-      (array= x y)
+  (if (and (typep x 'sym)
+           (typep y 'sym))
+      (sym= x y)
       (equal x y)))
 
 (defun ee (x y)
@@ -34,34 +29,17 @@
            (e (second x) (second y))
            (e (third x) (third y)))))
 
-(defun ensure-sym (x)
-  (if (typep x '(simple-array (unsigned-byte 8) (*)))
-      (id-sym x)
-      x))
-
-(defun clean (x)
-  (etypecase x
-    (string x)
-    (sym (sym-id x))
-    (svar x)))
-
 (defun add (label left right)
   ; TODO: ensure authorized, duplication check
-  (push (list (clean label) (clean left) (clean right)) *edges*)
+  (push (list label left right) *edges*)
   (values))
 
 (defun rm (label left right)
-  (setf label (clean label)
-        left (clean left)
-        right (clean right))
   ; TODO: holed edge
   (setf *edges* (remove (list label left right) *edges* :test #'ee))
   (values))
 
 (defun finde (n label left right)
-  (setf label (clean label)
-        left (clean left)
-        right (clean right))
   (loop
     while (plusp n)
     for edge in *edges*
@@ -70,4 +48,4 @@
               (or (svar-p right) (e right (third edge))))
     collect (progn
               (decf n)
-              (mapcar #'ensure-sym edge))))
+              edge)))

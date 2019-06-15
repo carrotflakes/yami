@@ -9,11 +9,12 @@
                 :generate-code)
   (:import-from :yami.sym
                 :sym
+                :gen-sym
+                :gen-locked-sym
                 :name-sym
-                :new-sym
-                :sym-auth
-                :sym-string
-                :sym-secret-string)
+                :with-sym-verify
+                :sym-verified-p
+                :sym-string)
   (:import-from :yami.store
                 :add
                 :rm
@@ -74,20 +75,21 @@
        (run-commands request commands)
        (setf (svar-value (second command)) nil))
       (:unlock
-       (sym-auth (resolve (second command)) (resolve (third command)))
-       (run-commands request commands))
+       (with-sym-verify ((resolve (second command)) (resolve (third command)))
+         (when (sym-verified-p (resolve (second command)))
+           (run-commands request commands))))
       (:symbol
        (loop
          for svar in (cdr command)
-         do (setf (svar-value svar) (new-sym)))
+         do (setf (svar-value svar) (gen-sym)))
        (run-commands request commands)
        (loop
          for svar in (cdr command)
          do (setf (svar-value svar) nil)))
       (:locked
-       (let ((sym (new-sym t)))
+       (multiple-value-bind (sym secret) (gen-locked-sym)
          (setf (svar-value (second command)) sym
-               (svar-value (third command)) (sym-secret-string sym)))
+               (svar-value (third command)) secret))
        (run-commands request commands)
        (setf (svar-value (second command)) nil
              (svar-value (third command)) nil))
