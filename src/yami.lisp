@@ -16,12 +16,15 @@
                 :sym-verified-p
                 :sym-string)
   (:import-from :yami.store
+                :setup
                 :add
                 :rm
                 :finde)
   (:export :query-code
            :run-commands))
 (in-package :yami)
+
+(setup "yami.txt")
 
 #|
 (defstruct request
