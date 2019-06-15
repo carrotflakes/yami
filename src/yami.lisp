@@ -21,10 +21,9 @@
                 :rm
                 :finde)
   (:export :query-code
-           :run-commands))
+           :run-commands
+           :setup))
 (in-package :yami)
-
-(setup "yami.txt")
 
 #|
 (defstruct request

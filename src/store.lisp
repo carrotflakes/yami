@@ -43,10 +43,11 @@
                                   :if-exists :append)))
 
 (defun push-change-log (form)
-  (write (mapcar (lambda (x) (if (typep x 'sym) (intern (sym-string x) :keyword) x)) form)
-         :stream *change-log-stream*)
-  (fresh-line *change-log-stream*)
-  (force-output *change-log-stream*))
+  (when *change-log-stream*
+    (write (mapcar (lambda (x) (if (typep x 'sym) (intern (sym-string x) :keyword) x)) form)
+           :stream *change-log-stream*)
+    (fresh-line *change-log-stream*)
+    (force-output *change-log-stream*)))
 
 
 (defun e (x y)
