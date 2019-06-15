@@ -73,4 +73,11 @@ findAll x y z;
 collect x y z;
 ")
 
+(f "
+locked v s;
+collect 'locked-sym:' v 'secret:' s;
+unlock v s;
+collect 'unlocked:)';
+")
+
 (finalize)

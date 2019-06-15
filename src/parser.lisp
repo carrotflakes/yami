@@ -25,7 +25,7 @@
   (and (cap "var") ws variable ws item ws ";"))
 
 (defrule unlock
-  (and (cap "unlock") ws variable ws string ws ";"))
+  (and (cap "unlock") ws variable ws (or string variable) ws ";"))
 
 (defrule symbol-command
   (and (cap "symbol") ws (many variable) ws ";"))
