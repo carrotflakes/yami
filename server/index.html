@@ -1,0 +1,59 @@
+<!DOCTYPE html>
+<html lang="ja">
+  <head>
+    <title>yami</title>
+    <style>
+     html, body, #app {
+       width: 100%;
+       height: 100%;
+       margin: 0;
+       padding: 0;
+     }
+     .query-box, .result-box {
+       width: 100%;
+       height: 300px;
+       box-sizing: border-box;
+     }
+    </style>
+  </head>
+  <body>
+    <div id="app">
+      <textarea class="query-box" v-model="query"></textarea>
+      <div><button @click="send">run</button></div>
+      <textarea class="result-box" v-model="result"></textarea>
+    </div>
+    <script src="https://unpkg.com/axios/dist/axios.min.js"></script>
+    <script src="https://cdn.jsdelivr.net/npm/vue"></script>
+    <script>
+     const app = new Vue({
+       el: '#app',
+       data: {
+         query: 'findAll x y z;\ncollect x y z;',
+         result: ''
+       },
+       methods: {
+         async send() {
+           const res = await axios.post('/api/v1/query', this.query);
+           this.result = res.data;
+         },
+         async chat(text) {
+           this.entries.push({
+             owner: 'you',
+             text
+           });
+           if (res.data.state === "ok") {
+             console.log(res.data);
+             this.entries.push({
+               owner: 'bot',
+               text: res.data.text
+             });
+             this.context = res.data.context;
+           } else {
+             console.error(res.data);
+           }
+         }
+       }
+     });
+    </script>
+  </body>
+</html>
