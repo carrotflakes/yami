@@ -1,5 +1,25 @@
 import axios from 'axios';
 
+class Sym {
+
+  constructor(id, name) {
+    this.id = id;
+    this.name = name || null;
+    this.edgesFrom = [];
+    this.edgesTo = [];
+  }
+
+  static get(id, name) {
+    if (symbols[id])
+      return symbols[id];
+    return symbols[id] = new Sym(id, name);
+  }
+
+}
+
+const symbols = {
+};
+
 function makeGen(f) {
   return new Proxy({}, {get(_, name) { return f(name); }});
 }
@@ -32,6 +52,14 @@ export class YamiClient {
     let env = {};
     let collectCount = 0;
     const collectCb = {};
+    const varString = x => {
+      if (x instanceof Sym)
+        return x.id;
+      if (typeof x === 'string')
+        return JSON.stringify(x);
+      x.bound = 1;
+      return x.name;
+    };
     fn({
       common: makeGen(name => {
         commands.push(`common ${name};`);
@@ -59,30 +87,26 @@ export class YamiClient {
       }),
       //unlock: 1,
       add(x, y, z) {
-        const f = x => (typeof x === 'string' ? JSON.stringify(x) : x.name);
-        commands.push(`add ${f(x)} ${f(y)} ${f(z)};`);
+        commands.push(`add ${varString(x)} ${varString(y)} ${varString(z)};`);
       },
       rm(x, y, z) {
-        const f = x => (typeof x === 'string' ? JSON.stringify(x) : (x.bound = 1, x.name));
-        commands.push(`rm ${f(x)} ${f(y)} ${f(z)};`);
+        commands.push(`rm ${varString(x)} ${varString(y)} ${varString(z)};`);
       },
       rmAll(x, y, z) {
-        const f = x => (typeof x === 'string' ? JSON.stringify(x) : (x.bound = 1, x.name));
-        commands.push(`rmAll ${f(x)} ${f(y)} ${f(z)};`);
+        commands.push(`rmAll ${varString(x)} ${varString(y)} ${varString(z)};`);
       },
       find1(x, y, z) {
-        const f = x => (typeof x === 'string' ? JSON.stringify(x) : (x.bound = 1, x.name));
-        commands.push(`find1 ${f(x)} ${f(y)} ${f(z)};`);
+        commands.push(`find1 ${varString(x)} ${varString(y)} ${varString(z)};`);
       },
       findAll(x, y, z) {
-        const f = x => (typeof x === 'string' ? JSON.stringify(x) : (x.bound = 1, x.name));
-        commands.push(`findAll ${f(x)} ${f(y)} ${f(z)};`);
+        commands.push(`findAll ${varString(x)} ${varString(y)} ${varString(z)};`);
       },
       collect(f) {
-        const params = f.toString().split('=>')[0].match(/[\w\d]+/g);
+        const params = f.toString().split('=>')[0].match(/[\w\d]+/g) || [];
         const env_ = env;
         commands.push(`collect "${collectCount}" ${params.join(' ')};`);
-        collectCb['"' + collectCount + '"'] = f;
+        const g = x => x[0] === '"' ? JSON.parse(x) : Sym.get(x);
+        collectCb['"' + collectCount + '"'] = (...xs) => f(...xs.map(g));
       }
     });
     const res = await this.sendRawQuery(commands.join('\n'));
