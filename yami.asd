@@ -11,13 +11,14 @@
   :version "0.1.0"
   :author "carrotflakes"
   :license "LLGPL"
-  :depends-on ("md5" "snaky")
+  :depends-on ("flexi-streams" "snaky")
   :components ((:module "src"
                 :components
                 ((:file "yami" :depends-on ("commands" "store"))
-                 (:file "commands" :depends-on ("parser" "sym"))
+                 (:file "commands" :depends-on ("parser" "string" "sym"))
                  (:file "parser")
                  (:file "store")
+                 (:file "string")
                  (:file "sym"))))
   :description ""
   :long-description

@@ -1,23 +1,39 @@
 (defpackage yami.store
   (:use :cl)
-  (:import-from :yami.sym
-                :sym=
-                :sym
-                :sym-string
-                :string-sym)
+  (:import-from :yami.string
+                :string-id)
   (:import-from :yami.commands
                 :svar
                 :svar-p
                 :svar-value)
-  (:export :setup
+  (:export :gen-string-id
+           :id-string
+           :setup
            :add
            :rm
            :finde))
 (in-package :yami.store)
 
-(defvar *edges* '())
+(defparameter *table* (make-hash-table :test 'eq))
 
-(defvar *change-log-stream* nil)
+(defun gen-string-id (string)
+  (let ((id (string-id string)))
+    (unless (gethash id *table*)
+      (push-change-log string))
+    (setf (gethash id *table*) string) ; TODO: if conflict...
+    id))
+
+(defun id-string (id)
+  (gethash id *table*))
+
+
+(defparameter *edges-size* (ash 1 15))
+(defparameter *edges* (make-array (* *edges-size* 3)
+                                  :element-type '(unsigned-byte 32)
+                                  :initial-element 0))
+(defparameter *edges-position* -1)
+
+(defparameter *change-log-stream* nil)
 
 (defun setup (path)
   (when *change-log-stream*
@@ -28,16 +44,16 @@
                           :element-type 'base-char
                           :external-format :utf-8
                           :if-does-not-exist :create)
-    (setf *edges* '())
+    (fill *edges* 0)
     (loop
       for form = (read stream nil)
       while form
-      for args = (mapcar (lambda (x) (if (typep x 'keyword) (string-sym (symbol-name x)) x))
-                         (cdr form))
-      do (cond ((string= (car form) "+")
-                (apply #'add args))
+      do (cond ((stringp form)
+                (setf (gethash (string-id form) *table*) form))
+               ((string= (car form) "+")
+                (apply #'add (cdr form)))
                ((string= (car form) "-")
-                (setf *edges* (delete args *edges* :test #'ee))))))
+                (apply #'rm 1 (cdr form))))))
   (setf *change-log-stream* (open path
                                   :direction :output
                                   :element-type 'base-char
@@ -46,44 +62,44 @@
 
 (defun push-change-log (form)
   (when *change-log-stream*
-    (write (mapcar (lambda (x) (if (typep x 'sym) (intern (sym-string x) :keyword) x)) form)
-           :stream *change-log-stream*)
+    (write form :stream *change-log-stream*)
     (fresh-line *change-log-stream*)
     (force-output *change-log-stream*)))
 
 
-(defun e (x y)
-  (if (and (typep x 'sym)
-           (typep y 'sym))
-      (sym= x y)
-      (equal x y)))
-
-(defun ee (x y)
-  (or (eq x y)
-      (and (e (first x) (first y))
-           (e (second x) (second y))
-           (e (third x) (third y)))))
+(defun pack (i label left right)
+  (make-array 4
+              :element-type '(unsigned-byte 32)
+              :initial-contents (list i label left right)))
 
 (defun add (label left right)
   ; TODO: ensure authorized, duplication check
-  (push (list label left right) *edges*)
+  (setf (aref *edges* (incf *edges-position*)) label
+        (aref *edges* (incf *edges-position*)) left
+        (aref *edges* (incf *edges-position*)) right)
   (push-change-log (list '+ label left right))
   (values))
-
-(defun rm (n label left right)
-  (let ((result (finde n label left right)))
-    (setf *edges* (set-difference *edges* result :test #'ee))
-    (dolist (edge result)
-      (push-change-log (list* '- edge)))
-    result))
 
 (defun finde (n label left right)
   (loop
     while (plusp n)
-    for edge in *edges*
-    when (and (or (svar-p label) (e label (first edge)))
-              (or (svar-p left) (e left (second edge)))
-              (or (svar-p right) (e right (third edge))))
+    for i below (* *edges-size* 3) by 3
+    when (and (or (svar-p label) (eq label (aref *edges* i)))
+              (or (svar-p left) (eq left (aref *edges* (+ i 1))))
+              (or (svar-p right) (eq right (aref *edges* (+ i 2))))
+              (/= (aref *edges* i) 0)
+              (/= (aref *edges* (+ i 1)) 0)
+              (/= (aref *edges* (+ i 2)) 0))
     collect (progn
               (decf n)
-              edge)))
+              (pack i (aref *edges* i) (aref *edges* (+ i 1)) (aref *edges* (+ i 2))))))
+
+(defun rm (n label left right)
+  (let ((result (finde n label left right)))
+    (loop
+      for pack in result
+      for i = (aref pack 0)
+      do (fill *edges* 0 :start i :end (+ i 2)))
+    (dolist (edge result)
+      (push-change-log (list* '- (cdr (coerce edge 'list)))))
+    result))

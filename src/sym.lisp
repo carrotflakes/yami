@@ -1,101 +1,62 @@
 (defpackage yami.sym
   (:use :cl)
-  (:import-from :md5
-                :md5sum-sequence
-                :md5sum-string)
-  (:export :sym
-           :sym=
-           :gen-sym
-           :gen-locked-sym
-           :name-sym
-           :sym-check
+  (:export :gen-sym
            :sym-string
-           :string-sym
-           :sym-locked-p
-           :sym-verify
-           :sym-verified-p
-           :with-sym-verify))
+           :string-sym))
 (in-package :yami.sym)
 
-(defparameter +key+ (md5sum-string "yamikey"))
+(defun revbit (v)
+  (dotimes (i 15)
+    (rotatef (ldb (byte 1 i) v) (ldb (byte 1 (- 29 i)) v)))
+  v)
 
-(deftype sym () '(simple-array (unsigned-byte 8) (16)))
+(defun egcd (a b)
+  (if (zerop a)
+      (values b 0 1)
+      (multiple-value-bind (g y x) (egcd (mod b a) a)
+        (values g (- x (* (floor b a) y)) y))))
 
-(defun array= (v1 v2)
-  (and (= (length v1) (length v2))
-       (loop
-         for i below (length v1)
-         unless (= (aref v1 i) (aref v2 i))
-         do (return nil)
-         finally (return t))))
+(defparameter *salt* #x18279131)
+(defparameter *inv-salt*
+  (multiple-value-bind (a b) (egcd *salt* #x40000000)
+    (assert (= a 1))
+    (mod b #x40000000)))
 
-(defun sym= (v1 v2)
-  (array= v1 v2))
+(assert (= (logand #x3fffffff (* *salt* *inv-salt*)) 1))
 
-(defun array-string (array)
-  (format nil "~(~{~2,'0x~}~)"
-          (coerce array 'list)))
+(defun scramble (v)
+  (logand #x3fffffff (* (revbit (logand #x3fffffff (* v *salt*))) *inv-salt*)))
 
-(defun string-array (string)
-  (coerce (loop
-            for i below (length string) by 2
-            collect (parse-integer string :start i :end (+ i 2) :radix 16))
-          '(SIMPLE-ARRAY (UNSIGNED-BYTE 8) (*))))
+(defun prin2 (n)
+  (format t "~%~30,'0b" n))
 
-(defun concat (x y)
-  (concatenate '(SIMPLE-ARRAY (UNSIGNED-BYTE 8) (*)) x y))
-
-
-(defun secret-sym (secret)
-  (md5sum-sequence (concat secret +key+)))
-
-(defvar *sym-count* 0)
-
-(defun %gen-sym (secret &optional name)
-  (let* ((secret-seed (if name
-                          (concatenate 'string name "/namedsym")
-                          (format nil "secret/~a/~a/~a"
-                                  (get-universal-time)
-                                  (get-internal-real-time)
-                                  (incf *sym-count*))))
-         (secret-md5 (md5sum-string (concatenate 'string secret-seed "/yami")))
-         (id-md5 (secret-sym secret-md5)))
-    (setf (aref id-md5 0) (if secret
-                              (logior (aref id-md5 0) #b10000000)
-                              (logand (aref id-md5 0) #b01111111)))
-    (values id-md5 secret-md5)))
-
+(defvar *id* -1)
 (defun gen-sym ()
-  (values (%gen-sym nil)))
+  (incf *id*))
 
-(defun gen-locked-sym ()
-  (multiple-value-bind (sym secret) (%gen-sym t)
-    (values sym (array-string secret))))
 
-(defun name-sym (name)
-  (values (%gen-sym nil name)))
+(defun id-string (id)
+  (format nil "~(~4,'0x~)" id))
+
+(defun string-id (string)
+  (parse-integer string :radix 16))
+
 
 (defun sym-check (sym)
-  (subseq (md5sum-sequence (concat sym +key+)) 0 8))
+  (logand (scramble (logxor sym #x3719)) #xffff))
 
 (defun sym-string (sym)
-  (format nil "~(~{~2,'0x~}~)"
-          (nconc (coerce sym 'list)
-                 (coerce (sym-check sym) 'list))))
+  (format nil "~(~8,'0x~4,'0x~)"
+          (scramble sym)
+          (sym-check sym)))
 
 (defun string-sym (string)
   (assert (stringp string))
-  (assert (= (length string) 48))
-  (let* ((sym (coerce (loop
-                        for i below 32 by 2
-                        collect (parse-integer string :start i :end (+ i 2) :radix 16))
-                      '(SIMPLE-ARRAY (UNSIGNED-BYTE 8) (16))))
-         (check (coerce (loop
-                          for i from 32 below 48 by 2
-                          collect (parse-integer string :start i :end (+ i 2) :radix 16))
-                        '(SIMPLE-ARRAY (UNSIGNED-BYTE 8) (8)))))
-    (assert (array= check (sym-check sym)))
+  (assert (= (length string) 12))
+  (let ((sym (scramble (parse-integer string :start 0 :end 8 :radix 16))))
+    (assert (= (sym-check sym) (parse-integer string :start 8 :radix 16)))
     sym))
+
 
 (defun sym-locked-p (sym)
   (= (logand (aref sym 0) #b10000000)
