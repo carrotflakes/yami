@@ -1,7 +1,8 @@
 (defpackage yami.store
   (:use :cl)
   (:import-from :yami.string
-                :string-id)
+                :string-id
+                :string-id-p)
   (:import-from :yami.commands
                 :svar
                 :svar-p
@@ -43,6 +44,10 @@
 
 (defparameter *change-log-stream* nil)
 
+(defun restore-id (id)
+  (unless (string-id-p id)
+    (setf yami.sym::*id* (max id yami.sym::*id*))))
+
 (defun setup (path)
   (when *change-log-stream*
     (close *change-log-stream*)
@@ -59,6 +64,7 @@
       do (cond ((stringp form)
                 (setf (gethash (string-id form) *table*) form))
                ((string= (car form) "+")
+                (mapc #'restore-id (cdr form))
                 (apply #'add (cdr form)))
                ((string= (car form) "-")
                 (apply #'rm 1 (cdr form))))))
