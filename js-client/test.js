@@ -1,7 +1,14 @@
 const {YamiClient} = require('./dist/yami-client.js');
 const yami = new YamiClient({url: 'http://localhost:3000'});
 
-async function f() {
+async function test(){
+
+  console.log('raw query ====');
+
+  console.log(await yami.sendRawQuery('findAll x y z; collect x y z;'));
+
+  console.log('query ====');
+
   let edge = null;
 
   await yami.query(s => {
@@ -23,4 +30,4 @@ async function f() {
 
 }
 
-f();
+test();

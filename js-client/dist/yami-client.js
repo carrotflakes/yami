@@ -3529,7 +3529,7 @@ class YamiClient {
       url: '/api/v1/query',
       data: query
     });
-    return this.formatResult(res.data);
+    return res.data;
   }
 
   formatResult(result) {
