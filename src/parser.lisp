@@ -19,35 +19,35 @@
          collect)))
 
 (defrule common
-  (and (cap "common") ws (many variable) ws ";"))
+  (and (cap "common") _ (many variable) _ ";"))
 
 (defrule var
-  (and (cap "var") ws variable ws item ws ";"))
+  (and (cap "var") _ variable _ item _ ";"))
 
 (defrule unlock
-  (and (cap "unlock") ws variable ws (or string variable) ws ";"))
+  (and (cap "unlock") _ variable _ (or string variable) _ ";"))
 
 (defrule symbol-command
-  (and (cap "symbol") ws (many variable) ws ";"))
+  (and (cap "symbol") _ (many variable) _ ";"))
 
 (defrule locked
-  (and (cap "locked") ws variable ws variable ws ";"))
+  (and (cap "locked") _ variable _ variable _ ";"))
 
 (defrule add
-  (and (cap "add") ws item ws item ws item ws ";"))
+  (and (cap "add") _ item _ item _ item _ ";"))
 
 (defrule rm
   (and (ret "rm")
        (or (and "rm1" (ret 1)) (and "rmAll" (ret 10000000)))
-       ws item ws item ws item ws ";"))
+       _ item _ item _ item _ ";"))
 
 (defrule find
   (and (ret "find")
        (or (and "find1" (ret 1)) (and "findAll" (ret 10000000)))
-       ws item ws item ws item ws ";"))
+       _ item _ item _ item _ ";"))
 
 (defrule collect
-  (and (cap "collect") ws (many item) ws ";"))
+  (and (cap "collect") _ (many item) _ ";"))
 
 (defrule item
   (or variable symbol string))
@@ -77,9 +77,17 @@
 (defun concat (list)
   (format nil "~{~a~}" list))
 
-(defrule ws (grp "whitespace" (* (cc #.(format nil " ~a~a~a" #\cr #\lf #\tab)))))
+(defrule _
+  (* (or ws comment)))
 
-(defrule (many x) (? (and x (* (and ws x)))))
+(defrule ws (grp "whitespace" (+ (cc #.(format nil " ~a~a~a" #\cr #\lf #\tab)))))
+
+(defrule comment
+  (grp "comment"
+       (or (and "//" (* (cc #.(format nil "^~a~a" #\cr #\lf))))
+           (and "/*" (* (and (! "*/") (any))) "*/"))))
+
+(defrule (many x) (? (and x (* (and _ x)))))
 
 
-(defparser parse (and ws query ws))
+(defparser parse (and _ query _))
