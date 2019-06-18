@@ -30,7 +30,7 @@
 (defun prin2 (n)
   (format t "~%~30,'0b" n))
 
-(defvar *id* -1)
+(defvar *id* 0)
 (defun gen-sym ()
   (incf *id*))
 
