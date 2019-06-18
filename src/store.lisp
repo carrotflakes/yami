@@ -17,10 +17,18 @@
 (defparameter *table* (make-hash-table :test 'eq))
 
 (defun gen-string-id (string)
-  (let ((id (string-id string)))
-    (unless (gethash id *table*)
+  (let* ((id (string-id string))
+         (stored-string (gethash id *table*)))
+    ; conflict check
+    (loop
+      while (and stored-string (string/= stored-string string))
+      do (print "string rehash" *error-output*)
+         (setf id (+ (logand (1+ id) #x3fffffff)
+                     #x40000000)
+               stored-string (gethash id *table*)))
+    (unless stored-string
       (push-change-log string))
-    (setf (gethash id *table*) string) ; TODO: if conflict...
+    (setf (gethash id *table*) string)
     id))
 
 (defun id-string (id)
