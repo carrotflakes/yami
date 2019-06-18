@@ -25,26 +25,6 @@
            :setup))
 (in-package :yami)
 
-#|
-(defstruct request
-  paid-calorie
-  remain-calorie
-  source
-  (output nil))
-
-(defstruct state
-  request
-  (bindings nil)
-  commands)
-
-
-(defvar source "add 'hoge' 'fuga' 'piyo';")
-(defvar req (make-request :paid-calorie 100
-                          :remain-calorie 100
-                          :source source))
-(defvar state (make-state :request req
-                          :commands (build (request-source req))))
-|#
 
 (defun query-code (source)
   (generate-code (parse source)))
@@ -66,15 +46,14 @@
               (concatenate 'string "?" (svar-name value))))))
 
 (defmacro aux (form)
-  `(loop
-     for edge in ,form
-     do (when (svar-p label) (setf (svar-value label) (aref edge 1)))
-        (when (svar-p left) (setf (svar-value left) (aref edge 2)))
-        (when (svar-p right) (setf (svar-value right) (aref edge 3)))
-        (run-commands request commands)
-        (when (svar-p label) (setf (svar-value label) nil))
-        (when (svar-p left) (setf (svar-value left) nil))
-        (when (svar-p right) (setf (svar-value right) nil))))
+  `(dolist (edge ,form)
+     (when (svar-p label) (setf (svar-value label) (aref edge 1)))
+     (when (svar-p left) (setf (svar-value left) (aref edge 2)))
+     (when (svar-p right) (setf (svar-value right) (aref edge 3)))
+     (run-commands request commands)
+     (when (svar-p label) (setf (svar-value label) nil))
+     (when (svar-p left) (setf (svar-value left) nil))
+     (when (svar-p right) (setf (svar-value right) nil))))
 
 (defun run-commands (request commands)
   (unless commands
