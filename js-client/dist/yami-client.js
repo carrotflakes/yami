@@ -3580,8 +3580,8 @@ class YamiClient {
       add(x, y, z) {
         commands.push(`add ${varString(x)} ${varString(y)} ${varString(z)};`);
       },
-      rm(x, y, z) {
-        commands.push(`rm ${varString(x)} ${varString(y)} ${varString(z)};`);
+      rm1(x, y, z) {
+        commands.push(`rm1 ${varString(x)} ${varString(y)} ${varString(z)};`);
       },
       rmAll(x, y, z) {
         commands.push(`rmAll ${varString(x)} ${varString(y)} ${varString(z)};`);

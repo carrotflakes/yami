@@ -14,6 +14,13 @@ async function f() {
     s.findAll(...edge);
     s.collect(() => console.log('ok'));
   });
+
+  await yami.query(s => {
+    s.add('a', 'b', 'c');
+    s.rm1('a', 'b', 'c');
+    s.collect(() => console.log('ok'));
+  });
+
 }
 
 f();
