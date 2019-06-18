@@ -7,7 +7,7 @@
 (in-package :yami.string)
 
 (defun string-id (string)
-  (let ((array (string-to-octets string))
+  (let ((array (string-to-octets string :external-format :utf-8))
         (id 1000000001))
     (dotimes (i (length array))
       (setf id (logxor id (* (+ (aref array i) (* i) 86432) 123454321))))
