@@ -101,9 +101,9 @@
     when (and (or (svar-p label) (eq label (aref *edges* i)))
               (or (svar-p left) (eq left (aref *edges* (+ i 1))))
               (or (svar-p right) (eq right (aref *edges* (+ i 2))))
-              (/= (aref *edges* i) 0)
-              (/= (aref *edges* (+ i 1)) 0)
-              (/= (aref *edges* (+ i 2)) 0))
+              (or (/= (aref *edges* i) 0)
+                  (/= (aref *edges* (+ i 1)) 0)
+                  (/= (aref *edges* (+ i 2)) 0)))
     collect (progn
               (decf n)
               (pack i (aref *edges* i) (aref *edges* (+ i 1)) (aref *edges* (+ i 2))))))
@@ -113,7 +113,7 @@
     (loop
       for pack in result
       for i = (aref pack 0)
-      do (fill *edges* 0 :start i :end (+ i 2)))
+      do (fill *edges* 0 :start i :end (+ i 3)))
     (dolist (edge result)
       (push-change-log (list* '- (cdr (coerce edge 'list)))))
     result))
