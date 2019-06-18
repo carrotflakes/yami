@@ -16,6 +16,8 @@
 (defvar *bindings*)
 
 (defun value (form)
+  (when (numberp form)
+    (return-from value form))
   (ecase (first form)
     (:variable (or (cdr (assoc (second form) *bindings* :test #'string=))
                    (let ((svar (make-svar :name (second form))))

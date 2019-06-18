@@ -97,33 +97,18 @@
             (resolve (fourth command))) ; TODO ensure no variable
        (run-commands request commands))
       (:rm
-       (let ((label (second command))
-             (left (third command))
-             (right (fourth command)))
-         (aux (rm 1
-                  (resolve (second command))
+       (let ((label (third command))
+             (left (fourth command))
+             (right (fifth command)))
+         (aux (rm (second command)
                   (resolve (third command))
-                  (resolve (fourth command))))))
-      (:rmAll
-       (let ((label (second command))
-             (left (third command))
-             (right (fourth command)))
-         (aux (rm 10000000
-                  (resolve (second command))
-                  (resolve (third command))
-                  (resolve (fourth command))))))
-      (:find1
-       (let ((label (resolve (second command)))
-             (left (resolve (third command)))
-             (right (resolve (fourth command))))
-         (aux (finde 1 label left right))))
-      (:findSome
-       )
-      (:findAll
-       (let ((label (resolve (second command)))
-             (left (resolve (third command)))
-             (right (resolve (fourth command))))
-         (aux (finde 10000000 label left right))))
+                  (resolve (fourth command))
+                  (resolve (fifth command))))))
+      (:find
+       (let ((label (resolve (third command)))
+             (left (resolve (fourth command)))
+             (right (resolve (fifth command))))
+         (aux (finde (second command) label left right))))
       (:collect
        (format t "~{~a~^ ~};~%"
                (loop

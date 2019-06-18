@@ -37,10 +37,14 @@
   (and (cap "add") ws item ws item ws item ws ";"))
 
 (defrule rm
-  (and (cap (or "rmAll" "rm")) ws item ws item ws item ws ";"))
+  (and (ret "rm")
+       (or (and "rm1" (ret 1)) (and "rmAll" (ret 10000000)))
+       ws item ws item ws item ws ";"))
 
 (defrule find
-  (and (cap (or "find1" "findSome" "findAll")) ws item ws item ws item ws ";"))
+  (and (ret "find")
+       (or (and "find1" (ret 1)) (and "findAll" (ret 10000000)))
+       ws item ws item ws item ws ";"))
 
 (defrule collect
   (and (cap "collect") ws (many item) ws ";"))
