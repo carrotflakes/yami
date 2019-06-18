@@ -5,13 +5,12 @@
                 :route
                 :*request*)
   (:import-from :yami
-                :query-code
-                :run-commands
-                :setup)
+                :setup
+                :run-query)
   (:export))
 (in-package :yami.server)
 
-(setup "yami.txt")
+(setup #p"change.log" #p"query.log")
 
 (defparameter +static-path+
   (merge-pathnames "server/"
@@ -30,7 +29,7 @@
           ;'(200 (:content-type "application/json") ("{}"))
           (handler-case
               (with-output-to-string (*standard-output*)
-                (run-commands nil (query-code query)))
+                (run-query query))
             (error (c)
               (princ-to-string c))))))
 

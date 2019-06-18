@@ -14,12 +14,13 @@
   :depends-on ("flexi-streams" "snaky")
   :components ((:module "src"
                 :components
-                ((:file "yami" :depends-on ("commands" "store"))
+                ((:file "yami" :depends-on ("commands" "store" "query-log"))
                  (:file "commands" :depends-on ("parser" "string" "sym"))
                  (:file "parser")
                  (:file "store")
                  (:file "string")
-                 (:file "sym"))))
+                 (:file "sym")
+                 (:file "query-log"))))
   :description ""
   :long-description
   #.(read-file-string

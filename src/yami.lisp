@@ -16,15 +16,21 @@
   (:import-from :yami.store
                 :gen-string-id
                 :id-string
-                :setup
                 :add
                 :rm
                 :finde)
+  (:import-from :yami.query-log
+                :push-query-log)
   (:export :query-code
            :run-commands
            :setup))
 (in-package :yami)
 
+
+(defun setup (change-log-path query-log-path)
+  (yami.store:setup change-log-path)
+  (when query-log-path
+    (yami.query-log:setup query-log-path)))
 
 (defun query-code (source)
   (generate-code (parse source)))
@@ -50,12 +56,12 @@
      (when (svar-p label) (setf (svar-value label) (aref edge 1)))
      (when (svar-p left) (setf (svar-value left) (aref edge 2)))
      (when (svar-p right) (setf (svar-value right) (aref edge 3)))
-     (run-commands request commands)
+     (run-commands commands)
      (when (svar-p label) (setf (svar-value label) nil))
      (when (svar-p left) (setf (svar-value left) nil))
      (when (svar-p right) (setf (svar-value right) nil))))
 
-(defun run-commands (request commands)
+(defun run-commands (commands)
   (unless commands
     (return-from run-commands))
   (let ((command (pop commands)))
@@ -64,23 +70,23 @@
       ;;  (loop
       ;;    for svar in (cdr command)
       ;;    do (setf (svar-value svar) (name-sym (svar-name svar))))
-      ;;  (run-commands request commands)
+      ;;  (run-commands commands)
       ;;  (loop
       ;;    for svar in (cdr command)
       ;;    do (setf (svar-value svar) nil)))
       (:var
        (setf (svar-value (second command)) (resolve (third command)))
-       (run-commands request commands)
+       (run-commands commands)
        (setf (svar-value (second command)) nil))
       ;; (:unlock
       ;;  (with-sym-verify ((resolve (second command)) (resolve (third command)))
       ;;    (when (sym-verified-p (resolve (second command)))
-      ;;      (run-commands request commands))))
+      ;;      (run-commands commands))))
       (:symbol
        (loop
          for svar in (cdr command)
          do (setf (svar-value svar) (gen-sym)))
-       (run-commands request commands)
+       (run-commands commands)
        (loop
          for svar in (cdr command)
          do (setf (svar-value svar) nil)))
@@ -88,14 +94,14 @@
       ;;  (multiple-value-bind (sym secret) (gen-locked-sym)
       ;;    (setf (svar-value (second command)) sym
       ;;          (svar-value (third command)) secret))
-      ;;  (run-commands request commands)
+      ;;  (run-commands commands)
       ;;  (setf (svar-value (second command)) nil
       ;;        (svar-value (third command)) nil))
       (:add
        (add (resolve (second command))
             (resolve (third command))
             (resolve (fourth command))) ; TODO ensure no variable
-       (run-commands request commands))
+       (run-commands commands))
       (:rm
        (let ((label (third command))
              (left (fourth command))
@@ -114,4 +120,8 @@
                (loop
                  for x in (cdr command)
                  collect (stringify x))) ; svar渡ってくる問題
-       (run-commands request commands)))))
+       (run-commands commands)))))
+
+(defun run-query (query)
+  (push-query-log query)
+  (run-commands (query-code query)))
