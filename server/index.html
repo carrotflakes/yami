@@ -33,24 +33,9 @@
        },
        methods: {
          async send() {
+           this.result = '';
            const res = await axios.post('/api/v1/query', this.query);
            this.result = res.data;
-         },
-         async chat(text) {
-           this.entries.push({
-             owner: 'you',
-             text
-           });
-           if (res.data.state === "ok") {
-             console.log(res.data);
-             this.entries.push({
-               owner: 'bot',
-               text: res.data.text
-             });
-             this.context = res.data.context;
-           } else {
-             console.error(res.data);
-           }
          }
        }
      });
