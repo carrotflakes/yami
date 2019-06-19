@@ -28,6 +28,12 @@ async function test(){
     s.collect(() => console.log('ok'));
   });
 
+  const node = await yami.fetchAsVertex('carrotflakes').catch(e => console.log(e));
+
+  console.log(`node ${node.name}:`);
+  console.log(node.edgesFrom);
+  console.log(node.edgesTo);
+
 }
 
 test();

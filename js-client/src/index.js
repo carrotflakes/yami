@@ -5,8 +5,8 @@ class Node {
   constructor(id, name) {
     this.id = id;
     this.name = name || null;
-    this.edgesFrom = [];
-    this.edgesTo = [];
+    this.edgesFrom = []; // this -> other
+    this.edgesTo = []; // other -> this
   }
 
   get isSymbol() {
@@ -16,25 +16,7 @@ class Node {
   get isString() {
     return !this.id;
   }
-
-  static getSymbol(id, name) {
-    if (symbols[id])
-      return symbols[id];
-    return symbols[id] = new Node(id, name);
-  }
-
-  static getString(string) {
-    if (strings[string])
-      return strings[string];
-    return strings[string] = new Node(null, string);
-  }
-
 }
-
-const symbols = {
-};
-const strings = {
-};
 
 function makeGen(f) {
   return new Proxy({}, {get(_, name) { return f(name); }});
@@ -44,6 +26,8 @@ export class YamiClient {
 
   constructor(opts) {
     this.url = opts.url;
+    this.symbols = {};
+    this.strings = {};
   }
 
   async sendRawQuery(query) {
@@ -77,6 +61,7 @@ export class YamiClient {
       return x.name;
     };
     fn({
+      client: this,
       common: makeGen(name => {
         commands.push(`common ${name};`);
         const v = {type: 'common', name, bound: 1};
@@ -121,13 +106,50 @@ export class YamiClient {
         const params = f.toString().split('=>')[0].match(/[\w\d]+/g) || [];
         const env_ = env;
         commands.push(`collect "${collectCount}" ${params.join(' ')};`);
-        const g = x => x[0] === '"' ? JSON.parse(x) : Node.getSymbol(x);
+        const g = x => x[0] === '"' ? this.client.getString(JSON.parse(x)) : this.client.getSymbol(x);
         collectCb['"' + collectCount + '"'] = (...xs) => f(...xs.map(g));
       }
     });
     const res = await this.sendRawQuery(commands.join('\n'));
     this.formatResult(res).map(x => collectCb[x[0]](...x.slice(1)));
     return res; // TODO
+  }
+
+  async fetchAsVertex(node) {
+    if (typeof node === 'string')
+      node = this.getString(node);
+
+    await this.query(s => {
+      const {label, right} = s.var;
+      s.findAll(label, node, right);
+      s.collect((label, right) => {
+        if (!node.edgesFrom.find(([b, r]) => b === label && r === right))
+          node.edgesFrom.push([label, right]);
+      });
+    });
+
+    await this.query(s => {
+      const {label, left} = s.var;
+      s.findAll(label, left, node);
+      s.collect((label, left) => {
+        if (!node.edgesTo.find(([b, l]) => b === label && l === left))
+          node.edgesTo.push([label, left]);
+      });
+    });
+
+    return node;
+  }
+
+  getSymbol(id, name) {
+    if (this.symbols[id])
+      return this.symbols[id];
+    return this.symbols[id] = new Node(id, name);
+  }
+
+  getString(string) {
+    if (this.strings[string])
+      return this.strings[string];
+    return this.strings[string] = new Node(null, string);
   }
 
 }
