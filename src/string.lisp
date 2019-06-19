@@ -8,11 +8,20 @@
 
 (defun string-id (string)
   (let ((array (string-to-octets string :external-format :utf-8))
-        (id 1000000001))
+        (id 0))
     (dotimes (i (length array))
-      (setf id (logxor id (* (+ (aref array i) (* i) 86432) 123454321))))
-    (+ (logand id #x3fffffff)
-       #x40000000)))
+      (setf id (logand (+ (* id #x0101)
+                          (* (aref array i) (+ 1234 i)))
+                       #x3fffffff)))
+    (+ id #x40000000)))
 
 (defun string-id-p (id)
   (<= #x40000000 id))
+
+
+(defun test (&optional (n 1000000))
+  (length
+   (remove-duplicates
+    (loop
+      for i below n
+      collect (string-id (write-to-string i))))))
