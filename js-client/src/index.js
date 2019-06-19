@@ -1,6 +1,6 @@
 import axios from 'axios';
 
-class Sym {
+class Node {
 
   constructor(id, name) {
     this.id = id;
@@ -9,15 +9,31 @@ class Sym {
     this.edgesTo = [];
   }
 
-  static get(id, name) {
+  get isSymbol() {
+    return !!this.id;
+  }
+
+  get isString() {
+    return !this.id;
+  }
+
+  static getSymbol(id, name) {
     if (symbols[id])
       return symbols[id];
-    return symbols[id] = new Sym(id, name);
+    return symbols[id] = new Node(id, name);
+  }
+
+  static getString(string) {
+    if (strings[string])
+      return strings[string];
+    return strings[string] = new Node(null, string);
   }
 
 }
 
 const symbols = {
+};
+const strings = {
 };
 
 function makeGen(f) {
@@ -53,8 +69,8 @@ export class YamiClient {
     let collectCount = 0;
     const collectCb = {};
     const varString = x => {
-      if (x instanceof Sym)
-        return x.id;
+      if (x instanceof Node)
+        return x.isSymbol ? x.id : JSON.stringify(x.name);
       if (typeof x === 'string')
         return JSON.stringify(x);
       x.bound = 1;
@@ -105,33 +121,13 @@ export class YamiClient {
         const params = f.toString().split('=>')[0].match(/[\w\d]+/g) || [];
         const env_ = env;
         commands.push(`collect "${collectCount}" ${params.join(' ')};`);
-        const g = x => x[0] === '"' ? JSON.parse(x) : Sym.get(x);
+        const g = x => x[0] === '"' ? JSON.parse(x) : Node.getSymbol(x);
         collectCb['"' + collectCount + '"'] = (...xs) => f(...xs.map(g));
       }
     });
     const res = await this.sendRawQuery(commands.join('\n'));
-    res.map(x => collectCb[x[0]](...x.slice(1)));
+    this.formatResult(res).map(x => collectCb[x[0]](...x.slice(1)));
     return res; // TODO
   }
 
 }
-/*
-query(yami => {
-  const {x, y, z} = yami.common;
-  const {a, b, c} = yami.symbol;
-  const {d, e, f} = yami.locked;
-  const {g, h} = yami.var;
-
-  yami.find(x, y, z);
-  yami.collect(x, y);
-})
-
-query.string(); // => 'common a, b, c;'
-
-query(x => {
-  const v = x.var.v;
-  x.add(x.common.root, x.common.has, v);
-  x.collect(v => );
-});
-
-*/
