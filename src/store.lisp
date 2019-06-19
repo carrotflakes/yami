@@ -36,7 +36,7 @@
   (gethash id *table*))
 
 
-(defparameter *edges-size* (ash 1 15))
+(defparameter *edges-size* (ash 1 20))
 (defparameter *edges* (make-array (* *edges-size* 3)
                                   :element-type '(unsigned-byte 32)
                                   :initial-element 0))

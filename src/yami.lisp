@@ -23,7 +23,8 @@
                 :push-query-log)
   (:export :query-code
            :run-commands
-           :setup))
+           :setup
+           :run-query))
 (in-package :yami)
 
 
