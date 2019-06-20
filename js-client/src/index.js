@@ -16,6 +16,11 @@ class Node {
   get isString() {
     return !this.id;
   }
+
+  toString() {
+    return this.isSymbol ? this.id : JSON.stringify(this.name);
+  }
+
 }
 
 function makeGen(f) {
@@ -54,7 +59,7 @@ export class YamiClient {
     const collectCb = {};
     const varString = x => {
       if (x instanceof Node)
-        return x.isSymbol ? x.id : JSON.stringify(x.name);
+        return x.toString();
       if (typeof x === 'string')
         return JSON.stringify(x);
       x.bound = 1;
@@ -139,6 +144,8 @@ export class YamiClient {
 
     return node;
   }
+
+  // fetchAsLabel(node) {}
 
   getSymbol(id, name) {
     if (this.symbols[id])
