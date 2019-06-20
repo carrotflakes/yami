@@ -28,10 +28,15 @@
         (let ((query (caar params)))
           ;'(200 (:content-type "application/json") ("{}"))
           (handler-case
-              (with-output-to-string (*standard-output*)
-                (run-query query))
+              `(200
+                '(:content-type "text/plain"
+                  :access-control-allow-origin "*")
+                (,(with-output-to-string (*standard-output*)
+                            (run-query query))))
             (error (c)
-              (princ-to-string c))))))
+               `(500
+                   (:access-control-allow-origin "*")
+                   ,(princ-to-string c)))))))
 
 (clack:clackup
  (lack.builder:builder
@@ -39,5 +44,5 @@
    :result-on-error `(500 (:content-type "text/plain") ("Internal Server Error")))
   *app*)
  :port (parse-integer (or (uiop:getenv "PORT") "3000"))
- :server :woo
+ :server :hunchentoot
  :use-default-middlewares nil)
