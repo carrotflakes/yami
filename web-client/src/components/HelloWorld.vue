@@ -1,8 +1,8 @@
 <template>
   <div class="hello">
-    <input type="text" v-model="text" @keydown.ctrl.enter="add"/>
     <svg class="canvas"
-         view-box="0 0 600 400">
+         :width="width" :height="height"
+         :view-box="`0 0 ${width} ${height}`">
       <Arrow v-for="(edge, index) in edges" :key="'edge/' + index"
              :edge="edge"
              :expand="expand"/>
@@ -19,6 +19,7 @@
               dominant-baseline="central">{{node.toString()}}</text>
       </g>
     </svg>
+    <input type="text" v-model="text" @keydown.ctrl.enter="add" style="position: relative;"/>
   </div>
 </template>
 
@@ -35,6 +36,8 @@ export default {
   },
   data() {
     return {
+      width: document.body.clientWidth,
+      height: document.body.clientHeight,
       text: '',
       nodes: [],
       edges: []
@@ -88,6 +91,12 @@ export default {
       e.stopPropagation()
     }
   },
+  mounted() {
+    window.addEventListener('resize', this.resize = e => {
+      this.width = e.width
+      this.height = e.height
+    });
+  },
   updated() {
     let update = false
     let node
@@ -103,9 +112,9 @@ export default {
 <!-- Add "scoped" attribute to limit CSS to this component only -->
 <style scoped>
 .canvas {
-  width: 600px;
-  height: 400px;
-  position: relative;
+  position: absolute;
+  top: 0;
+  left: 0;
 }
 
 .node {
