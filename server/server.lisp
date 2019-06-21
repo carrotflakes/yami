@@ -29,8 +29,8 @@
           ;'(200 (:content-type "application/json") ("{}"))
           (handler-case
               `(200
-                '(:content-type "text/plain"
-                  :access-control-allow-origin "*")
+                (:content-type "text/plain"
+                 :access-control-allow-origin "*")
                 (,(with-output-to-string (*standard-output*)
                             (run-query query))))
             (error (c)
