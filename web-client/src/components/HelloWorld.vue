@@ -3,14 +3,16 @@
     <svg class="canvas"
          :width="width" :height="height"
          :viewBox="`${scrollX} ${scrollY} ${width} ${height}`"
-         @mousedown="canvasMousedown($event)">
+         @mousedown="canvasMousedown($event)"
+         @touchstart="canvasMousedown($event)">
       <Arrow v-for="(edge, index) in edges" :key="'edge/' + index"
              :edge="edge"
              :expand="expand"
              :nodeName="nodeName"/>
       <g v-for="(node, index) in nodes" :key="'node/' + index"
          class="node"
-         @mousedown="nodeMousedown($event, node)">
+         @mousedown="nodeMousedown($event, node)"
+         @touchstart="nodeMousedown($event, node)">
         <rect v-if="node.bbox"
               :x="node.bbox.x - 2" :y="node.bbox.y - 2"
               :width="node.bbox.width + 4" :height="node.bbox.height + 4"
@@ -45,7 +47,7 @@
 <script>
 import Arrow from './Arrow.vue'
 import {YamiClient} from 'yami-client'
-import {spring} from '../utils'
+import {spring, genDrag} from '../utils'
 
 const yami = new YamiClient({url: 'http://localhost:3000'})
 
@@ -127,52 +129,28 @@ export default {
       spring(this.nodes)
     },
     nodeMousedown(e, node) {
-      let x = e.clientX, y = e.clientY, move = false
-      const mousemove = e => {
-        node.x += e.clientX - x
-        node.y += e.clientY - y
+      genDrag(e, (dx, dy) => {
+        node.x += dx
+        node.y += dy
         node.bbox = null
-        x = e.clientX
-        y = e.clientY
-        move = true
-        e.stopPropagation()
-      }
-      const mouseup = e => {
-        window.removeEventListener('mousemove', mousemove)
-        window.removeEventListener('mouseup', mouseup)
-        e.stopPropagation()
-        if (!move) {
+      }, moved => {
+        if (!moved) {
           if (this.currentNode === node)
             this.currentNode = null
           else
             this.currentNode = node
         }
-      }
-      window.addEventListener('mousemove', mousemove)
-      window.addEventListener('mouseup', mouseup)
-      e.stopPropagation()
+      })
     },
     canvasMousedown(e) {
-      let x = e.clientX, y = e.clientY, move = false
-      const mousemove = e => {
-        this.scrollX -= e.clientX - x
-        this.scrollY -= e.clientY - y
-        x = e.clientX
-        y = e.clientY
-        move = true
-        e.stopPropagation()
-      }
-      const mouseup = e => {
-        window.removeEventListener('mousemove', mousemove)
-        window.removeEventListener('mouseup', mouseup)
-        e.stopPropagation()
-        if (!move) {
+      genDrag(e, (dx, dy) => {
+        this.scrollX -= dx
+        this.scrollY -= dy
+      }, moved => {
+        if (!moved) {
           this.currentNode = null
         }
-      }
-      window.addEventListener('mousemove', mousemove)
-      window.addEventListener('mouseup', mouseup)
-      e.stopPropagation()
+      })
     },
     nodeName(node) {
       if (this.signifyNode) {

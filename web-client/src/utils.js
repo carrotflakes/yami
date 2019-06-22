@@ -38,3 +38,41 @@ export function spring(nodes) {
     node.bbox = null;
   }
 }
+
+export function genDrag(e, move, end) {
+  const isTouchEvent = e.type === 'touchstart';
+  const unwrap = isTouchEvent ? e => e.changedTouches[0] : e => e; // FIXME changedTouches[0] ?
+  let x = unwrap(e).clientX, y = unwrap(e).clientY, moved = false;
+  const mousemove = e => {
+    const {clientX, clientY } = unwrap(e);
+    move(clientX - x, clientY - y);
+    x = clientX;
+    y = clientY;
+    moved = true;
+    e.preventDefault();
+    e.stopPropagation();
+  };
+  const mouseup = e => {
+    if (isTouchEvent) {
+      window.removeEventListener('touchmove', mousemove);
+      window.removeEventListener('touchend', mouseup);
+      window.removeEventListener('touchcancel', mouseup);
+    } else {
+      window.removeEventListener('mousemove', mousemove);
+      window.removeEventListener('mouseup', mouseup);
+    }
+    e.preventDefault();
+    e.stopPropagation();
+    end(moved);
+  };
+  if (isTouchEvent) {
+    window.addEventListener('touchmove', mousemove, {passive: false});
+    window.addEventListener('touchend', mouseup, {passive: false});
+    window.addEventListener('touchcancel', mouseup, {passive: false});
+  } else {
+    window.addEventListener('mousemove', mousemove);
+    window.addEventListener('mouseup', mouseup);
+  }
+  // e.preventDefault(); ?
+  e.stopPropagation();
+}
