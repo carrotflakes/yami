@@ -2,14 +2,15 @@
   <div class="hello">
     <svg class="canvas"
          :width="width" :height="height"
-         :view-box="`0 0 ${width} ${height}`">
+         :viewBox="`${scrollX} ${scrollY} ${width} ${height}`"
+         @mousedown="canvasMousedown($event)">
       <Arrow v-for="(edge, index) in edges" :key="'edge/' + index"
              :edge="edge"
              :expand="expand"
              :nodeName="nodeName"/>
       <g v-for="(node, index) in nodes" :key="'node/' + index"
          class="node"
-         @mousedown="mousedown($event, node)">
+         @mousedown="nodeMousedown($event, node)">
         <rect v-if="node.bbox"
               :x="node.bbox.x - 2" :y="node.bbox.y - 2"
               :width="node.bbox.width + 4" :height="node.bbox.height + 4"
@@ -23,7 +24,7 @@
     <input type="text" v-model="text" @keydown.ctrl.enter="run" style="position: relative;"/>
     <div v-if="currentNode"
          id="nodeMenu"
-         :style="{left: `${currentNode.x}px`, top: `${currentNode.y+14}px`}">
+         :style="{left: `${currentNode.x-scrollX}px`, top: `${currentNode.y+14-scrollY}px`}">
       <div @click="expand(currentNode)">
         expand
       </div>
@@ -47,6 +48,8 @@ export default {
   },
   data() {
     return {
+      scrollX: 0,
+      scrollY: 0,
       width: document.body.clientWidth,
       height: document.body.clientHeight,
       text: '',
@@ -92,8 +95,8 @@ export default {
     },
     addNode(node) {
       if (!~this.nodes.indexOf(node)) {
-        this.$set(node, 'x', (Math.random() * 500 | 0) + 50)
-        this.$set(node, 'y', (Math.random() * 300 | 0) + 50)
+        this.$set(node, 'x', (Math.random() * (this.width - 50) | 0) + 25 + this.scrollX)
+        this.$set(node, 'y', (Math.random() * (this.height - 50) | 0) + 25 + this.scrollY)
         this.$set(node, 'bbox', null)
         this.nodes.push(node)
       }
@@ -111,7 +114,7 @@ export default {
       else
         this.signifyNode = node
     },
-    mousedown(e, node) {
+    nodeMousedown(e, node) {
       let x = e.clientX, y = e.clientY, move = false
       const mousemove = e => {
         node.x += e.clientX - x
@@ -131,6 +134,28 @@ export default {
             this.currentNode = null
           else
             this.currentNode = node
+        }
+      }
+      window.addEventListener('mousemove', mousemove)
+      window.addEventListener('mouseup', mouseup)
+      e.stopPropagation()
+    },
+    canvasMousedown(e) {
+      let x = e.clientX, y = e.clientY, move = false
+      const mousemove = e => {
+        this.scrollX -= e.clientX - x
+        this.scrollY -= e.clientY - y
+        x = e.clientX
+        y = e.clientY
+        move = true
+        e.stopPropagation()
+      }
+      const mouseup = e => {
+        window.removeEventListener('mousemove', mousemove)
+        window.removeEventListener('mouseup', mouseup)
+        e.stopPropagation()
+        if (!move) {
+          this.currentNode = null
         }
       }
       window.addEventListener('mousemove', mousemove)
