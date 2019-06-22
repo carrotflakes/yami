@@ -9,6 +9,16 @@ class Node {
     this.edgesTo = []; // other -> this
   }
 
+  _pushEdgesFrom(label, right) {
+    if (!this.edgesFrom.find(([b, r]) => b === label && r === right))
+      this.edgesFrom.push([label, right]);
+  }
+
+  _pushEdgesTo(label, left) {
+    if (!this.edgesTo.find(([b, l]) => b === label && l === left))
+      this.edgesTo.push([label, left]);
+  }
+
   get isSymbol() {
     return !!this.id;
   }
@@ -130,6 +140,7 @@ export class YamiClient {
       s.collect((label, right) => {
         if (!node.edgesFrom.find(([b, r]) => b === label && r === right))
           node.edgesFrom.push([label, right]);
+        right._pushEdgesTo(label, node);
       });
     });
 
@@ -139,6 +150,7 @@ export class YamiClient {
       s.collect((label, left) => {
         if (!node.edgesTo.find(([b, l]) => b === label && l === left))
           node.edgesTo.push([label, left]);
+        left._pushEdgesFrom(label, node);
       });
     });
 
