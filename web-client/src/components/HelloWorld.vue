@@ -1,5 +1,5 @@
 <template>
-  <div class="hello">
+  <div class="component">
     <svg class="canvas"
          :width="width" :height="height"
          :viewBox="`${scrollX} ${scrollY} ${width} ${height}`"
@@ -21,7 +21,14 @@
               dominant-baseline="central">{{nodeName(node)}}</text>
       </g>
     </svg>
-    <input type="text" v-model="text" @keydown.ctrl.enter="run" style="position: relative;"/>
+    <input id="queryBox" type="text" v-model="text" @keydown.ctrl.enter="run"/>
+    <span class="humbergerButton" @click="() => {showMainMenu=!showMainMenu}">&#x1f354;</span>
+    <div v-if="showMainMenu"
+         id="mainMenu">
+      <div @click="spring">
+        spring
+      </div>
+    </div>
     <div v-if="currentNode"
          id="nodeMenu"
          :style="{left: `${currentNode.x-scrollX}px`, top: `${currentNode.y+14-scrollY}px`}">
@@ -38,6 +45,7 @@
 <script>
 import Arrow from './Arrow.vue'
 import {YamiClient} from 'yami-client'
+import {spring} from '../utils'
 
 const yami = new YamiClient({url: 'http://localhost:3000'})
 
@@ -52,6 +60,7 @@ export default {
       scrollY: 0,
       width: document.body.clientWidth,
       height: document.body.clientHeight,
+      showMainMenu: false,
       text: '',
       nodes: [],
       edges: [],
@@ -113,6 +122,9 @@ export default {
         this.signifyNode = null
       else
         this.signifyNode = node
+    },
+    spring() {
+      spring(this.nodes)
     },
     nodeMousedown(e, node) {
       let x = e.clientX, y = e.clientY, move = false
@@ -212,6 +224,10 @@ export default {
 
 <!-- Add "scoped" attribute to limit CSS to this component only -->
 <style scoped>
+.component {
+  position: relative;
+}
+
 .canvas {
   position: absolute;
   top: 0;
@@ -223,6 +239,37 @@ export default {
   user-select: none;
 }
 
+.humbergerButton {
+  position: absolute;
+  font-size: 200%;
+  cursor: pointer;
+  filter: drop-shadow(0 0 5px rgba(0, 0, 0, 0.5));
+}
+
+#queryBox {
+  width: 240px;
+  position: absolute;
+  top: 3px;
+  left: 50%;
+  margin-left: -120px;
+  filter: drop-shadow(0 0 3px rgba(0, 0, 0, 0.3));
+  padding: 4px;
+  box-sizing: border-box;
+}
+
+#mainMenu {
+  position: absolute;
+  top: 50px;
+  left: 4px;
+  display: inline-block;
+  padding: 3px;
+  background: rgba(255, 255, 255, 0.9);
+  border: 1px solid #777;
+  color: #777;
+  text-align: left;
+  user-select: none;
+}
+
 #nodeMenu {
   position: absolute;
   display: inline-block;
@@ -231,12 +278,13 @@ export default {
   border: 1px solid #777;
   color: #777;
   text-align: left;
+  user-select: none;
 }
 
-#nodeMenu > div {
+#nodeMenu > div, #mainMenu > div {
   cursor: pointer;
 }
-#nodeMenu > div:hover {
+#nodeMenu > div:hover, #mainMenu > div:hover {
   background: #eee;
 }
 </style>

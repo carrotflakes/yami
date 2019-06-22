@@ -10,3 +10,31 @@ export function intersect(x0, y0, x1, y1, x2, y2, x3, y3) {
     return null;
   return {x: x0 + r * (x1 - x0), y: y0 + r * (y1 - y0)};
 }
+
+function distance(n1, n2) {
+  return ((n1.x - n2.x) ** 2 + (n1.y - n2.y) ** 2) ** (1/2);
+}
+
+export function spring(nodes) {
+  const pos = [];
+  for (const node of nodes) {
+    const x = 0, y = 0;
+    for (const [_, n] of [...node.edgesFrom, ...node.edgesTo]) {
+      const d = Math.log(distance(node, n) / 120) * 0.2;
+      x += (n.x - node.x) * d;
+      y += (n.y - node.y) * d;
+    }
+    for (const n of nodes) {
+      const dist = distance(node, n);
+      if (n === node || 200 < dist) continue;
+      const d = -200 / Math.max(10, dist) ** 2;
+      x += (n.x - node.x) * d;
+      y += (n.y - node.y) * d;
+    }
+    pos.push([node, x, y]);
+  }
+  for (const [node, x, y] of pos) {
+    node.x += x, node.y += y;
+    node.bbox = null;
+  }
+}
