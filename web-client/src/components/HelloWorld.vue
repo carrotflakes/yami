@@ -20,7 +20,7 @@
               dominant-baseline="central">{{nodeName(node)}}</text>
       </g>
     </svg>
-    <input type="text" v-model="text" @keydown.ctrl.enter="add" style="position: relative;"/>
+    <input type="text" v-model="text" @keydown.ctrl.enter="run" style="position: relative;"/>
     <div v-if="currentNode"
          id="nodeMenu"
          :style="{left: `${currentNode.x}px`, top: `${currentNode.y+14}px`}">
@@ -57,11 +57,27 @@ export default {
     }
   },
   methods: {
-    async add() {
+    async run() {
       const {text} = this
-      const node = await yami.fetchAsVertex(text)
-      this.text = ''
-      this.addNode(node)
+      {
+        const match = text.match(/(\S+) - (\S+) -> (\S+)/)
+        if (match) {
+          const lbr = match.slice(1, 4).map(x=>this.parse(x))
+          console.log(lbr)
+          if (!~lbr.indexOf(null)) {
+            if (await yami.addEdge(lbr[1], lbr[0], lbr[2]))
+              this.text = ''
+          }
+          console.log('adding edge failed')
+          return
+        }
+      }
+      {
+        const node = await yami.fetchAsVertex(text)
+        this.addNode(node)
+        this.text = ''
+        return
+      }
     },
     async expand(node) {
       this.addNode(await yami.fetchAsVertex(node))
@@ -114,6 +130,22 @@ export default {
           return edge[1].name
         }
       return node.toString()
+    },
+    parse(string) {
+      if (string[0] === ':') {
+        return yami.getSymbol(string)
+      } else if (string[0] === '"') {
+        return yami.getString(JSON.parse(string))
+      }
+      if (this.signifyNode) {
+        const node = yami.getString(string)
+        if (node) {
+          const edge = node.edgesFrom.find(e => e[0] === this.signifyNode)
+          if (edge)
+            return edge[1]
+        }
+      }
+      return null
     }
   },
   mounted() {
