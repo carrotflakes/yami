@@ -3638,6 +3638,28 @@ class YamiClient {
 
   // fetchAsLabel(node) {}
 
+  async addEdge(label, left, right) {
+    let succeeded = false;
+    await this.query(s => {
+      s.add(label, left, right);
+      s.collect(() => {
+        succeeded = true;
+      });
+    });
+    return succeeded;
+  }
+
+  async removeEdge(label, left, right) {
+    let succeeded = false;
+    await this.query(s => {
+      s.rm1(label, left, right);
+      s.collect(() => {
+        succeeded = true;
+      });
+    });
+    return succeeded;
+  }
+
   getSymbol(id, name) {
     if (this.symbols[id])
       return this.symbols[id];

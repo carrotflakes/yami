@@ -28,11 +28,18 @@ async function test(){
     s.collect(() => console.log('ok'));
   });
 
+  console.log('fetchAsVertex ====');
+
   const node = await yami.fetchAsVertex('carrotflakes').catch(e => console.log(e));
 
   console.log(`node ${node.name}:`);
   console.log(node.edgesFrom);
   console.log(node.edgesTo);
+
+  console.log('addEdge, removeEdge ====');
+
+  console.log(await yami.addEdge('aa', 'bb', 'cc'));
+  console.log(await yami.removeEdge('aa', 'bb', 'cc'));
 
 }
 
