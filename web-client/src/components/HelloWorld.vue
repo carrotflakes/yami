@@ -65,8 +65,13 @@ export default {
           const lbr = match.slice(1, 4).map(x=>this.parse(x))
           console.log(lbr)
           if (!~lbr.indexOf(null)) {
-            if (await yami.addEdge(lbr[1], lbr[0], lbr[2]))
+            for (let i in lbr)
+              if (lbr[i] === '_') lbr[i] = null
+            const res = await yami.addEdge(lbr[1], lbr[0], lbr[2])
+            if (res) {
+              res.forEach(node => this.addNode(node))
               this.text = ''
+            }
           }
           console.log('adding edge failed')
           return
@@ -132,7 +137,9 @@ export default {
       return node.toString()
     },
     parse(string) {
-      if (string[0] === ':') {
+      if (string === '_') {
+        return '_';
+      } else if (string[0] === ':') {
         return yami.getSymbol(string)
       } else if (string[0] === '"') {
         return yami.getString(JSON.parse(string))
