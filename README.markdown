@@ -13,6 +13,18 @@ $ ros run -e "(ql:quickload :yami-server)"
 
 Then you can access to localhost:3000 .
 
+### Web client
+
+After server start, you can use the built-in web client that enables you GUI operation.
+
+``` sh
+$ cd web-client
+$ npm i
+$ npm run serve
+```
+
+And open http://localhost:8080/ .
+
 ## Installation
 
 ``` sh
