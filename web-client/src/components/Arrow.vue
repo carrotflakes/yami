@@ -1,29 +1,31 @@
 <template>
   <g>
-    <line :x1="x1" :y1="y1" :x2="x2" :y2="y2"
-          stroke="#ddd" stroke-width="4" marker-end="url(#arrow)"/>
+    <line v-if="start && end" :x1="start.x" :y1="start.y" :x2="end.x" :y2="end.y"
+          stroke="#ddd" stroke-width="8" marker-end="url(#arrow)"/>
     <text class="label"
           :x="0" :y="0"
           text-anchor="middle"
           dominant-baseline="central"
-          :transform="`translate(${(left.x + right.x) / 2} ${(left.y + right.y) / 2}),rotate(${Math.atan2(left.y-right.y, left.x-right.x) * 180 / Math.PI})`"
-          color="#666"
+          :transform="`translate(${(left.x + right.x) / 2} ${(left.y + right.y) / 2}),rotate(${Math.atan2(left.y-right.y, left.x-right.x) * 180 / Math.PI + 180})`"
+          fill="#666"
           font-size="10"
           @click="expand(label)">
-        {{label.toString()}}
+        {{nodeName(label)}}
     </text>
     <marker id="arrow" viewBox="-5 -5 10 10" orient="auto">
-      <polygon points="-5,-5 5,0 -5,5" fill="#ddd" stroke="none" />
+      <polygon points="0,-5 5,0 0,5" fill="#ddd" stroke="none" />
     </marker>
   </g>
 </template>
 
 <script>
+import {intersect} from '../utils'
+
 export default {
   name: 'Array',
-  props: ['edge', 'expand'],
+  props: ['edge', 'expand', 'nodeName'],
   data() {
-    const [label, left, right] = this.edge;
+    const [label, left, right] = this.edge
     return {
       label,
       left,
@@ -31,11 +33,28 @@ export default {
     }
   },
   computed: {
-    x1() { return (this.left.x * 3 + this.right.x) / 4 },
-    y1() { return (this.left.y * 3 + this.right.y) / 4 },
-    x2() { return (this.right.x * 3 + this.left.x) / 4 },
-    y2() { return (this.right.y * 3 + this.left.y) / 4 }
+    start() { return this.left.bbox &&clipByBBox(this.left, this.right, this.left.bbox, -5) },
+    end() { return this.right.bbox &&clipByBBox(this.left, this.right, this.right.bbox, 15) }
   }
+}
+
+function clipByBBox(p1, p2, bbox, margin) {
+  const {x: x1, y: y1} = p1
+  const {x: x2, y: y2} = p2
+  let {x, y, width: w, height: h} = bbox
+  x -= margin
+  y -= margin
+  w += margin * 2
+  h += margin * 2
+  let pos;
+  if (pos = intersect(x, y, x+w, y, x1, y1, x2, y2))
+    return pos
+  if (pos = intersect(x+w, y, x+w, y+h, x1, y1, x2, y2))
+    return pos
+  if (pos = intersect(x+w, y+h, x, y+h, x1, y1, x2, y2))
+    return pos
+  if (pos = intersect(x, y+h, x, y, x1, y1, x2, y2))
+    return pos
 }
 </script>
 

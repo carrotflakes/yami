@@ -5,7 +5,8 @@
          :view-box="`0 0 ${width} ${height}`">
       <Arrow v-for="(edge, index) in edges" :key="'edge/' + index"
              :edge="edge"
-             :expand="expand"/>
+             :expand="expand"
+             :nodeName="nodeName"/>
       <g v-for="(node, index) in nodes" :key="'node/' + index"
          class="node"
          @mousedown="mousedown($event, node)">
@@ -16,16 +17,26 @@
         <text :ref="'node/' + index"
               :x="node.x" :y="node.y"
               text-anchor="middle"
-              dominant-baseline="central">{{node.toString()}}</text>
+              dominant-baseline="central">{{nodeName(node)}}</text>
       </g>
     </svg>
     <input type="text" v-model="text" @keydown.ctrl.enter="add" style="position: relative;"/>
+    <div v-if="currentNode"
+         id="nodeMenu"
+         :style="{left: `${currentNode.x}px`, top: `${currentNode.y+14}px`}">
+      <div @click="expand(currentNode)">
+        expand
+      </div>
+      <div @click="() => {signifyNode = currentNode}">
+        signify
+      </div>
+    </div>
   </div>
 </template>
 
 <script>
 import Arrow from './Arrow.vue'
-import {YamiClient} from 'yami-client';
+import {YamiClient} from 'yami-client'
 
 const yami = new YamiClient({url: 'http://localhost:3000'})
 
@@ -40,7 +51,9 @@ export default {
       height: document.body.clientHeight,
       text: '',
       nodes: [],
-      edges: []
+      edges: [],
+      currentNode: null,
+      signifyNode: null
     }
   },
   methods: {
@@ -83,19 +96,31 @@ export default {
         window.removeEventListener('mousemove', mousemove)
         window.removeEventListener('mouseup', mouseup)
         e.stopPropagation()
-        if (!move)
-          this.expand(node)
+        if (!move) {
+          if (this.currentNode === node)
+            this.currentNode = null
+          else
+            this.currentNode = node
+        }
       }
       window.addEventListener('mousemove', mousemove)
       window.addEventListener('mouseup', mouseup)
       e.stopPropagation()
+    },
+    nodeName(node) {
+      if (this.signifyNode) {
+        const edge = node.edgesTo.find((e) => e[0] === this.signifyNode)
+        if (edge && edge[1].isString)
+          return edge[1].name
+        }
+      return node.toString()
     }
   },
   mounted() {
     window.addEventListener('resize', this.resize = e => {
       this.width = e.width
       this.height = e.height
-    });
+    })
   },
   updated() {
     let update = false
@@ -105,6 +130,9 @@ export default {
         node.bbox = this.$refs[key][0].getBBox(), update = true
     if (update)
       this.$forceUpdate()
+  },
+  beforeDestroy() {
+    window,removeEventListener('resize', this.resize)
   }
 }
 </script>
@@ -120,5 +148,22 @@ export default {
 .node {
   cursor: pointer;
   user-select: none;
+}
+
+#nodeMenu {
+  position: absolute;
+  display: inline-block;
+  padding: 3px;
+  background: rgba(255, 255, 255, 0.9);
+  border: 1px solid #777;
+  color: #777;
+  text-align: left;
+}
+
+#nodeMenu > div {
+  cursor: pointer;
+}
+#nodeMenu > div:hover {
+  background: #eee;
 }
 </style>
