@@ -27,7 +27,7 @@
       <div @click="expand(currentNode)">
         expand
       </div>
-      <div @click="() => {signifyNode = currentNode}">
+      <div @click="toggleSignifyNode(currentNode)">
         signify
       </div>
     </div>
@@ -78,6 +78,9 @@ export default {
         }
       }
       {
+        if (~text.indexOf(' ')) {
+          return
+        }
         const node = await yami.fetchAsVertex(text)
         this.addNode(node)
         this.text = ''
@@ -101,6 +104,12 @@ export default {
       for (const [label, left] of node.edgesTo)
         if (!this.edges.find(([b, l, r]) => label === b && left === l && node === r))
           this.edges.push([label, left, node]), this.addNode(left)
+    },
+    toggleSignifyNode(node) {
+      if (this.signifyNode === node)
+        this.signifyNode = null
+      else
+        this.signifyNode = node
     },
     mousedown(e, node) {
       let x = e.clientX, y = e.clientY, move = false
