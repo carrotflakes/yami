@@ -3510,6 +3510,18 @@ class Node {
       this.edgesTo.push([label, left]);
   }
 
+  _removeEdgesFrom(label, right) {
+    const index = this.edgesFrom.findIndex(([b, r]) => b === label && r === right);
+    if (index !== -1)
+      this.edgesFrom.splice(index, 1);
+  }
+
+  _removeEdgesTo(label, left) {
+    const index = this.edgesTo.findIndex(([b, l]) => b === label && l === left);
+    if (index !== -1)
+      this.edgesTo.splice(index, 1);
+  }
+
   get isSymbol() {
     return !!this.id;
   }
@@ -3651,17 +3663,33 @@ class YamiClient {
   // fetchAsLabel(node) {}
 
   async addEdge(label, left, right) {
+    if (typeof label === 'string') label = this.getString(label);
+    if (typeof left === 'string') left = this.getString(left);
+    if (typeof right === 'string') right = this.getString(right);
     let succeeded = false;
     await this.query(s => {
+      if (label === null) label = s.symbol.b;
+      if (left === null) left = s.symbol.l;
+      if (right === null) right = s.symbol.r;
       s.add(label, left, right);
       s.collect(() => {
         succeeded = true;
       });
+      if (label.type === 'symbol') s.collect((b) => { label = b; });
+      if (left.type === 'symbol') s.collect((l) => { left = l; });
+      if (right.type === 'symbol') s.collect((r) => { right = r; });
     });
-    return succeeded;
+    if (succeeded) {
+      left._pushEdgesFrom(label, right);
+      right._pushEdgesTo(label, left);
+    }
+    return succeeded && [label, left, right];
   }
 
   async removeEdge(label, left, right) {
+    if (typeof label === 'string') label = this.getString(label);
+    if (typeof left === 'string') left = this.getString(left);
+    if (typeof right === 'string') right = this.getString(right);
     let succeeded = false;
     await this.query(s => {
       s.rm1(label, left, right);
@@ -3669,7 +3697,11 @@ class YamiClient {
         succeeded = true;
       });
     });
-    return succeeded;
+    if (succeeded) {
+      left._removeEdgesFrom(label, right);
+      right._removeEdgesTo(label, left);
+    }
+    return succeeded && [label, left, right];
   }
 
   getSymbol(id, name) {
