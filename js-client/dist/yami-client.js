@@ -3626,6 +3626,7 @@ class YamiClient {
         commands.push(`collect "${collectCount}" ${params.join(' ')};`);
         const g = x => x[0] === '"' ? this.client.getString(JSON.parse(x)) : this.client.getSymbol(x);
         collectCb['"' + collectCount + '"'] = (...xs) => f(...xs.map(g));
+        collectCount += 1;
       }
     });
     const res = await this.sendRawQuery(commands.join('\n'));
