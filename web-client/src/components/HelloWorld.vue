@@ -157,8 +157,8 @@ export default {
   },
   mounted() {
     window.addEventListener('resize', this.resize = e => {
-      this.width = e.width
-      this.height = e.height
+      this.width = document.body.clientWidth
+      this.height = document.body.clientHeight
     })
   },
   updated() {
