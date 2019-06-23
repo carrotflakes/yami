@@ -41,16 +41,24 @@ export function spring(nodes) {
 
 export function genDrag(e, move, end) {
   const isTouchEvent = e.type === 'touchstart';
-  const unwrap = isTouchEvent ? e => e.changedTouches[0] : e => e; // FIXME changedTouches[0] ?
-  let x = unwrap(e).clientX, y = unwrap(e).clientY, moved = false;
+  const touchIdentifier = isTouchEvent ? e.changedTouches[0].identifier : null;
+  let x, y, moved = false;
+  if (isTouchEvent)
+    x = e.changedTouches[0].clientX, y = e.changedTouches[0].clientY;
+  else
+    x = e.clientX, y = e.clientY;
   const mousemove = e => {
-    const {clientX, clientY } = unwrap(e);
-    move(clientX - x, clientY - y);
-    x = clientX;
-    y = clientY;
-    moved = true;
     e.preventDefault();
     e.stopPropagation();
+    let pos = e;
+    if (isTouchEvent) {
+      pos = [].find.call(e.changedTouches, t => t.identifier === touchIdentifier);
+      if (!pos) return;
+    }
+    move(pos.clientX - x, pos.clientY - y);
+    x = pos.clientX;
+    y = pos.clientY;
+    moved = true;
   };
   const mouseup = e => {
     if (isTouchEvent) {
