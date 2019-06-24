@@ -18,7 +18,12 @@ Then you can access to localhost:3000 .
 After server start, you can use the built-in web client that enables you GUI operation.
 
 ``` sh
-$ cd web-client
+$ cd js-client
+$ npm i
+$ npm run build
+$ npm link
+$ cd ../web-client
+$ npm link yami-client
 $ npm i
 $ npm run serve
 ```
