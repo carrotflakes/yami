@@ -9,7 +9,7 @@
           :transform="`translate(${(left.x + right.x) / 2} ${(left.y + right.y) / 2}),rotate(${Math.atan2(left.y-right.y, left.x-right.x) * 180 / Math.PI + 180})`"
           fill="#666"
           font-size="10"
-          @click="expand(label)">
+          @click="click(edge)">
         {{nodeName(label)}}
     </text>
     <marker id="arrow" viewBox="-5 -5 10 10" orient="auto">
@@ -23,7 +23,7 @@ import {intersect} from '../utils'
 
 export default {
   name: 'Array',
-  props: ['edge', 'expand', 'nodeName'],
+  props: ['edge', 'click', 'nodeName'],
   data() {
     const [label, left, right] = this.edge
     return {

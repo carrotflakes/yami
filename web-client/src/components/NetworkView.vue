@@ -7,7 +7,7 @@
          @touchstart="canvasMousedown($event)">
       <Arrow v-for="(edge, index) in edges" :key="'edge/' + index"
              :edge="edge"
-             :expand="expand"
+             :click="clickEdge"
              :nodeName="nodeName"/>
       <g v-for="(node, index) in nodes" :key="'node/' + index"
          class="node"
@@ -44,6 +44,16 @@
         table
       </div>
     </div>
+    <div v-if="currentEdge"
+         id="edgeMenu"
+         :style="{left: `${currentEdge[1].x-scrollX}px`, top: `${currentEdge[1].y+14-scrollY}px`}">
+      <div @click="expand(currentEdge[0])">
+        expand
+      </div>
+      <div @click="removeEdge(currentEdge)">
+        remove
+      </div>
+    </div>
   </div>
 </template>
 
@@ -68,6 +78,7 @@ export default {
       nodes: [],
       edges: [],
       currentNode: null,
+      currentEdge: null,
       signifyNode: null
     }
   },
@@ -86,6 +97,7 @@ export default {
             if (res) {
               res.forEach(node => this.addNode(node))
               this.text = ''
+              return
             }
           }
           console.log('adding edge failed')
@@ -120,6 +132,22 @@ export default {
         if (!this.edges.find(([b, l, r]) => label === b && left === l && node === r))
           this.edges.push([label, left, node]), this.addNode(left)
     },
+    clickEdge(edge) {
+      this.currentNode = null
+      if (this.currentEdge === edge)
+        this.currentEdge = null
+      else
+        this.currentEdge = edge
+    },
+    async removeEdge(edge) {
+      const succeeded = await yami.removeEdge(...edge)
+      if (succeeded) {
+        this.edges.splice(this.edges.indexOf(this.currentEdge), 1)
+        this.currentEdge = null;
+      } else {
+        console.error('remove edge failed :(')
+      }
+    },
     toggleSignifyNode(node) {
       if (this.signifyNode === node)
         this.signifyNode = null
@@ -136,6 +164,7 @@ export default {
         node.bbox = null
       }, moved => {
         if (!moved) {
+          this.currentEdge = null
           if (this.currentNode === node)
             this.currentNode = null
           else
@@ -257,7 +286,7 @@ export default {
   user-select: none;
 }
 
-#nodeMenu {
+#nodeMenu, #edgeMenu {
   position: absolute;
   display: inline-block;
   padding: 3px;
@@ -268,10 +297,10 @@ export default {
   user-select: none;
 }
 
-#nodeMenu > div, #mainMenu > div {
+#nodeMenu > div, #mainMenu > div, #edgeMenu > div {
   cursor: pointer;
 }
-#nodeMenu > div:hover, #mainMenu > div:hover {
+#nodeMenu > div:hover, #mainMenu > div:hover, #edgeMenu > div:hover {
   background: #eee;
 }
 </style>
