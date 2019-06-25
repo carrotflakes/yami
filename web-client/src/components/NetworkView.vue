@@ -52,7 +52,7 @@ import {spring, genDrag} from '../utils'
 const yami = new YamiClient({url: 'http://localhost:3000'})
 
 export default {
-  name: 'HelloWorld',
+  name: 'NetworkView',
   components: {
     Arrow
   },

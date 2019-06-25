@@ -1,16 +1,16 @@
 <template>
   <div id="app">
-    <HelloWorld/>
+    <NetworkView/>
   </div>
 </template>
 
 <script>
-import HelloWorld from './components/HelloWorld.vue'
+import NetworkView from './components/NetworkView.vue'
 
 export default {
   name: 'app',
   components: {
-    HelloWorld
+    NetworkView
   }
 }
 </script>
