@@ -103,7 +103,7 @@
                 (setf x (resolve x))
                 (when (svar-p x) (error "Variable cannot be added"))
                 x))
-         (add (resolve* (second command))
+         (add (resolve* (second command)) ; TODO no-duplicate-chack when passed new symbols
               (resolve* (third command))
               (resolve* (fourth command)))) ; TODO ensure no variable
        (run-commands commands))

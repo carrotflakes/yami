@@ -86,8 +86,10 @@
               :element-type '(unsigned-byte 32)
               :initial-contents (list i label left right)))
 
-(defun add (label left right)
-  ; TODO: ensure authorized, duplication check
+(defun add (label left right &optional no-duplicate-check)
+  (unless no-duplicate-check
+    (when (finde 1 label left right)
+      (return-from add (values))))
   (setf (aref *edges* (incf *edges-position*)) label
         (aref *edges* (incf *edges-position*)) left
         (aref *edges* (incf *edges-position*)) right)

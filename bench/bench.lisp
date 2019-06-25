@@ -2,9 +2,9 @@
 
 (use-package :yami)
 
-(print "Add 10000 edges:")
+(print "Add 1000 edges:")
 (time
- (dotimes (i 10000)
+ (dotimes (i 1000)
    (run-query (format nil "
 symbol s;
 add 'foobar' '~a' s;" i))))
