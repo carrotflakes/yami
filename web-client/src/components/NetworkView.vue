@@ -40,16 +40,17 @@
       <div @click="toggleSignifyNode(currentNode)">
         signify
       </div>
+      <div @click="showTable(currentNode)">
+        table
+      </div>
     </div>
   </div>
 </template>
 
 <script>
 import Arrow from './Arrow.vue'
-import {YamiClient} from 'yami-client'
 import {spring, genDrag} from '../utils'
-
-const yami = new YamiClient({url: 'http://localhost:3000'})
+import {yami} from '../yami'
 
 export default {
   name: 'NetworkView',
@@ -177,6 +178,14 @@ export default {
         }
       }
       return null
+    },
+    showTable(node) {
+      console.group(this.nodeName(node))
+      for (const [label, right] of node.edgesFrom)
+        console.log(`-> ${this.nodeName(label)} ${this.nodeName(right)}`)
+      for (const [label, left] of node.edgesTo)
+        console.log(`<- ${this.nodeName(label)} ${this.nodeName(left)}`)
+      console.groupEnd()
     }
   },
   mounted() {
