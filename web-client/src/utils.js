@@ -31,7 +31,8 @@ export function spring(nodes) {
       x += (n.x - node.x) * d;
       y += (n.y - node.y) * d;
     }
-    pos.push([node, x, y]);
+    const d = Math.max(1, (x ** 2 + y ** 2) ** (1/2) / 50);
+    pos.push([node, x / d, y / d]);
   }
   for (const [node, x, y] of pos) {
     node.x += x, node.y += y;
