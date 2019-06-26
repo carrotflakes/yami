@@ -79,7 +79,8 @@ export default {
       edges: [],
       currentNode: null,
       currentEdge: null,
-      signifyNode: null
+      signifyNode: null,
+      springEnabled: false
     }
   },
   methods: {
@@ -154,8 +155,12 @@ export default {
       else
         this.signifyNode = node
     },
-    spring() {
-      spring(this.nodes)
+    async spring() {
+      this.springEnabled = !this.springEnabled
+      while (this.springEnabled) {
+        spring(this.nodes)
+        await new Promise(resolve => setTimeout(resolve, 100))
+      }
     },
     nodeMousedown(e, node) {
       genDrag(e, (dx, dy) => {
