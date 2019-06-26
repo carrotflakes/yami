@@ -28,7 +28,10 @@
     <div v-if="showMainMenu"
          id="mainMenu">
       <div @click="spring">
-        spring
+        spring ({{ springEnabled ? 'on' : 'off'}})
+      </div>
+      <div @click="autoExpand">
+        auto expand{{ autoExpanding ? ' running...' : ''}}
       </div>
     </div>
     <div v-if="currentNode"
@@ -80,7 +83,8 @@ export default {
       currentNode: null,
       currentEdge: null,
       signifyNode: null,
-      springEnabled: false
+      springEnabled: false,
+      autoExpanding: false
     }
   },
   methods: {
@@ -110,6 +114,7 @@ export default {
           return
         }
         const node = await yami.fetchAsVertex(text)
+        node.expandedAt = Date.now()
         this.addNode(node)
         this.text = ''
         return
@@ -117,6 +122,22 @@ export default {
     },
     async expand(node) {
       this.addNode(await yami.fetchAsVertex(node))
+      node.expandedAt = Date.now()
+    },
+    async autoExpand() {
+      this.autoExpanding = !this.autoExpanding
+      while (this.autoExpanding) {
+        const nodes = this.nodes.filter(x => !x.expandedAt)
+        for (const node of nodes) {
+          if (this.nodes.includes(node)) {
+            await this.expand(node)
+            await new Promise(resolve => setTimeout(resolve, 500))
+          }
+        }
+        if (!nodes.length)
+          break
+      }
+      this.autoExpanding = false
     },
     addNode(node) {
       if (!~this.nodes.indexOf(node)) {
@@ -158,7 +179,7 @@ export default {
     async spring() {
       this.springEnabled = !this.springEnabled
       while (this.springEnabled) {
-        spring(this.nodes)
+        spring(this.nodes.filter(x => x.bbox))
         await new Promise(resolve => setTimeout(resolve, 100))
       }
     },
@@ -282,16 +303,9 @@ export default {
   position: absolute;
   top: 50px;
   left: 4px;
-  display: inline-block;
-  padding: 3px;
-  background: rgba(255, 255, 255, 0.9);
-  border: 1px solid #777;
-  color: #777;
-  text-align: left;
-  user-select: none;
 }
 
-#nodeMenu, #edgeMenu {
+#mainMenu, #nodeMenu, #edgeMenu {
   position: absolute;
   display: inline-block;
   padding: 3px;
@@ -300,9 +314,11 @@ export default {
   color: #777;
   text-align: left;
   user-select: none;
+  font-size: 125%;
 }
 
 #nodeMenu > div, #mainMenu > div, #edgeMenu > div {
+  padding: 3px;
   cursor: pointer;
 }
 #nodeMenu > div:hover, #mainMenu > div:hover, #edgeMenu > div:hover {
