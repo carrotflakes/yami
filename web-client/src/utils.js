@@ -19,7 +19,8 @@ export function spring(nodes) {
   const pos = [];
   for (const node of nodes) {
     const x = 0, y = 0;
-    for (const [_, n] of [...node.edgesFrom, ...node.edgesTo]) {
+    const edges = [...node.edgesFrom, ...node.edgesTo].filter(e => nodes.includes(e[1]));
+    for (const [_, n] of edges) {
       const d = Math.log(distance(node, n) / 120) * 0.2;
       x += (n.x - node.x) * d;
       y += (n.y - node.y) * d;

@@ -20,6 +20,7 @@
         <text :ref="'node/' + index"
               :x="node.x" :y="node.y"
               text-anchor="middle"
+              font-size="16"
               dominant-baseline="central">{{nodeName(node)}}</text>
       </g>
     </svg>
@@ -79,12 +80,28 @@ export default {
       showMainMenu: false,
       text: '',
       nodes: [],
-      edges: [],
       currentNode: null,
       currentEdge: null,
       signifyNode: null,
+      attributeNodes: [],
       springEnabled: false,
       autoExpanding: false
+    }
+  },
+  computed: {
+    edges() {
+      const edges = []
+      for (const node of this.nodes)
+        for (const [label, right] of node.edgesFrom)
+          if (this.nodes.includes(right) &&
+              !edges.find(([b, l, r]) => label === b && node === l && right === r))
+            edges.push([label, node, right])
+      for (const node of this.nodes)
+        for (const [label, left] of node.edgesTo)
+          if (this.nodes.includes(left) &&
+              !edges.find(([b, l, r]) => label === b && left === l && node === r))
+            edges.push([label, left, node])
+      return edges
     }
   },
   methods: {
@@ -95,7 +112,7 @@ export default {
         if (match) {
           const lbr = match.slice(1, 4).map(x=>this.parse(x))
           console.log(lbr)
-          if (!~lbr.indexOf(null)) {
+          if (!lbr.includes(null)) {
             for (let i in lbr)
               if (lbr[i] === '_') lbr[i] = null
             const res = await yami.addEdge(lbr[1], lbr[0], lbr[2])
@@ -140,19 +157,18 @@ export default {
       this.autoExpanding = false
     },
     addNode(node) {
-      if (!~this.nodes.indexOf(node)) {
+      if (!this.nodes.includes(node)) {
         this.$set(node, 'x', (Math.random() * (this.width - 50) | 0) + 25 + this.scrollX)
         this.$set(node, 'y', (Math.random() * (this.height - 50) | 0) + 25 + this.scrollY)
         this.$set(node, 'bbox', null)
+        this.$set(node, 'visible', true)
         this.nodes.push(node)
       }
 
       for (const [label, right] of node.edgesFrom)
-        if (!this.edges.find(([b, l, r]) => label === b && node === l && right === r))
-          this.edges.push([label, node, right]), this.addNode(right)
+        !this.nodes.includes(right) && this.addNode(right)
       for (const [label, left] of node.edgesTo)
-        if (!this.edges.find(([b, l, r]) => label === b && left === l && node === r))
-          this.edges.push([label, left, node]), this.addNode(left)
+        !this.nodes.includes(left) && this.addNode(left)
     },
     clickEdge(edge) {
       this.currentNode = null
@@ -164,7 +180,6 @@ export default {
     async removeEdge(edge) {
       const succeeded = await yami.removeEdge(...edge)
       if (succeeded) {
-        this.edges.splice(this.edges.indexOf(this.currentEdge), 1)
         this.currentEdge = null;
       } else {
         console.error('remove edge failed :(')
