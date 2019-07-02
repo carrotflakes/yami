@@ -10,6 +10,7 @@
              :click="clickEdge"
              :nodeName="nodeName"/>
       <g v-for="(node, index) in nodes" :key="'node/' + index"
+         v-if="node.visible"
          class="node"
          @mousedown="nodeMousedown($event, node)"
          @touchstart="nodeMousedown($event, node)">
@@ -47,6 +48,9 @@
       <div @click="showTable(currentNode)">
         table
       </div>
+      <div @click="() => { currentNode.visible = false }">
+        hide
+      </div>
     </div>
     <div v-if="currentEdge"
          id="edgeMenu"
@@ -83,7 +87,7 @@ export default {
       currentNode: null,
       currentEdge: null,
       signifyNode: null,
-      attributeNodes: [],
+      attributeNodes: [], // TODO
       springEnabled: false,
       autoExpanding: false
     }
@@ -91,22 +95,32 @@ export default {
   computed: {
     edges() {
       const edges = []
-      for (const node of this.nodes)
+      for (const node of this.nodes) {
+        if (!node.visible)
+          continue
         for (const [label, right] of node.edgesFrom)
-          if (this.nodes.includes(right) &&
+          if (right.visible &&
               !edges.find(([b, l, r]) => label === b && node === l && right === r))
             edges.push([label, node, right])
-      for (const node of this.nodes)
         for (const [label, left] of node.edgesTo)
-          if (this.nodes.includes(left) &&
+          if (left.visible &&
               !edges.find(([b, l, r]) => label === b && left === l && node === r))
             edges.push([label, left, node])
+      }
       return edges
     }
   },
   methods: {
     async run() {
       const {text} = this
+      {
+        if (text === 'showAll') {
+          for (const node of this.nodes)
+            node.visible = true
+          this.text = ''
+          return
+        }
+      }
       {
         const match = text.match(/(\S+) - (\S+) -> (\S+)/)
         if (match) {
