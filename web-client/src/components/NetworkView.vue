@@ -72,6 +72,7 @@ import {yami} from '../yami'
 
 export default {
   name: 'NetworkView',
+  props: ['width', 'height'],
   components: {
     Arrow
   },
@@ -79,8 +80,6 @@ export default {
     return {
       scrollX: 0,
       scrollY: 0,
-      width: document.body.clientWidth,
-      height: document.body.clientHeight,
       showMainMenu: false,
       text: '',
       nodes: [],
@@ -272,12 +271,6 @@ export default {
       console.groupEnd()
     }
   },
-  mounted() {
-    window.addEventListener('resize', this.resize = e => {
-      this.width = document.body.clientWidth
-      this.height = document.body.clientHeight
-    })
-  },
   updated() {
     let update = false
     let node
@@ -286,9 +279,6 @@ export default {
         node.bbox = this.$refs[key][0].getBBox(), update = true
     if (update)
       this.$forceUpdate()
-  },
-  beforeDestroy() {
-    window,removeEventListener('resize', this.resize)
   }
 }
 </script>

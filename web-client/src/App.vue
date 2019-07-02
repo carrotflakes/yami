@@ -1,6 +1,6 @@
 <template>
   <div id="app">
-    <NetworkView/>
+    <NetworkView :width="width" :height="height"/>
   </div>
 </template>
 
@@ -11,6 +11,21 @@ export default {
   name: 'app',
   components: {
     NetworkView
+  },
+  data() {
+    return {
+      width: document.body.clientWidth,
+      height: document.body.clientHeight,
+    }
+  },
+  mounted() {
+    window.addEventListener('resize', this.resize = e => {
+      this.width = document.body.clientWidth
+      this.height = document.body.clientHeight
+    })
+  },
+  beforeDestroy() {
+    window,removeEventListener('resize', this.resize)
   }
 }
 </script>
