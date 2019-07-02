@@ -33,8 +33,12 @@ export default {
     }
   },
   computed: {
-    start() { return this.left.bbox &&clipByBBox(this.left, this.right, this.left.bbox, -5) },
-    end() { return this.right.bbox &&clipByBBox(this.left, this.right, this.right.bbox, 15) }
+    start() {
+      return this.left.bbox && clipByBBox(this.left, this.right, this.left.bbox, -5)
+    },
+    end() {
+      return this.right.bbox && clipByBBox(this.left, this.right, this.right.bbox, 15)
+    }
   }
 }
 
@@ -55,6 +59,7 @@ function clipByBBox(p1, p2, bbox, margin) {
     return pos
   if (pos = intersect(x, y+h, x, y, x1, y1, x2, y2))
     return pos
+  return null
 }
 </script>
 

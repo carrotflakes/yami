@@ -6,7 +6,7 @@ export function intersect(x0, y0, x1, y1, x2, y2, x3, y3) {
   var r = numeratorR / denominator;
   var numeratorS = (y0 - y2) * (x1 - x0) - (x0 - x2) * (y1 - y0);
   var s = numeratorS / denominator;
-  if(r < 0 || r > 1 || s < 0 || s > 1)
+  if(r < 0 || r > 1 || s < 0 || s > 1 || Number.isNaN(r) || Number.isNaN(s))
     return null;
   return {x: x0 + r * (x1 - x0), y: y0 + r * (y1 - y0)};
 }
