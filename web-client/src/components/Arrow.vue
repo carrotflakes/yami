@@ -24,15 +24,10 @@ import {intersect} from '../utils'
 export default {
   name: 'Array',
   props: ['edge', 'click', 'nodeName'],
-  data() {
-    const [label, left, right] = this.edge
-    return {
-      label,
-      left,
-      right
-    }
-  },
   computed: {
+    label() { return this.edge[0] },
+    left() { return this.edge[1] },
+    right() { return this.edge[2] },
     start() {
       return this.left.bbox && clipByBBox(this.left, this.right, this.left.bbox, -5)
     },
