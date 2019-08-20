@@ -273,10 +273,14 @@ export default {
   },
   updated() {
     let update = false
-    let node
-    for (const key in this.$refs)
-      if (key.startsWith('node/') && !(node = this.nodes[key.substr('node/'.length)]).bbox)
-        node.bbox = this.$refs[key][0].getBBox(), update = true
+    for (const i in this.nodes) {
+      const node = this.nodes[i]
+      const els = this.$refs['node/' + i]
+      if (!node.bbox && els && els[0]) {
+        node.bbox = els[0].getBBox()
+        update = true
+      }
+    }
     if (update)
       this.$forceUpdate()
   }
