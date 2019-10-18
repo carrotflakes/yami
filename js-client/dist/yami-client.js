@@ -3621,7 +3621,7 @@ class YamiClient {
         commands.push(`findAll ${varString(x)} ${varString(y)} ${varString(z)};`);
       },
       collect(f) {
-        const params = f.toString().split('=>')[0].match(/[\w\d]+/g) || [];
+        const params = f.toString().match(/(?:function)?(.+?)(?:=>|{)/)[1].match(/[\w\d]+/g) || [];
         const env_ = env;
         commands.push(`collect "${collectCount}" ${params.join(' ')};`);
         const g = x => x[0] === '"' ? this.client.getString(JSON.parse(x)) : this.client.getSymbol(x);
