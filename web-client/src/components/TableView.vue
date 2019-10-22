@@ -15,15 +15,16 @@
       schema: {{ (currentSchema || ['-'])[0] }}
       <div v-for="(attribute, index) in schemaAttributes" :key="index"
            class="list-item">
-        {{ attribute[0] }}
+        {{ attribute[0] === 0 ? 'forward' : 'backward' }} : {{ attribute[1] }}
       </div>
     </div>
     <div>
       entities
-      <div v-for="(entity, index) in entities" :key="index"
+      <!--div v-for="(entity, index) in entities" :key="index"
            class="list-item">
         {{ entity[0] }}
-      </div>
+        </div-->
+      <vue-good-table :columns="entitiesColumns" :rows="entitiesRows"/>
     </div>
   </div>
 </template>
@@ -42,7 +43,9 @@ export default {
       schemas: [],
       currentSchema: null,
       schemaAttributes: [],
-      entities: []
+      entities: [],
+      entitiesColumns: [],
+      entitiesRows: []
     }
   },
   methods: {
@@ -57,11 +60,10 @@ export default {
       const signify = this.signify
       this.schemas = []
       await yami.query(s => {
-        const {schema, isa, x, target, targetName} = s.var
+        const {schema, isa, target, targetName} = s.var
         s.find1(signify, "schema", schema)
         s.find1(signify, "isa", isa)
-        s.findAll(isa, x, schema)
-        s.find1(schema, target, x)
+        s.findAll(isa, target, schema)
         s.find1(signify, targetName, target)
         s.collect((targetName, target) => {
           this.schemas.push([targetName, target])
@@ -74,12 +76,21 @@ export default {
       this.entities = []
       const signify = this.signify
       await yami.query(s => {
-        const {attribute, attr, attrName} = s.var
-        s.find1(signify, "attribute", attribute)
-        s.findAll(attribute, schema[1], attr)
+        const {attributeF, attr, attrName} = s.var
+        s.find1(signify, "attributeForward", attributeF)
+        s.findAll(attributeF, schema[1], attr)
         s.find1(signify, attrName, attr)
         s.collect((attrName, attr) => {
-          this.schemaAttributes.push([attrName, attr])
+          this.schemaAttributes.push([0, attrName, attr])
+        })
+      })
+      await yami.query(s => {
+        const {attributeB, attr, attrName} = s.var
+        s.find1(signify, "attributeBackward", attributeB)
+        s.findAll(attributeB, schema[1], attr)
+        s.find1(signify, attrName, attr)
+        s.collect((attrName, attr) => {
+          this.schemaAttributes.push([1, attrName, attr])
         })
       })
       await yami.query(s => {
@@ -91,6 +102,42 @@ export default {
           this.entities.push([targetName, target])
         })
       })
+      this.entitiesColumns = this.schemaAttributes.map(a => ({
+        label: a[1].name,
+        field: x => x[a[2].id]
+      }))
+      this.entitiesColumns.unshift({
+        label: 'name',
+        field: '_name'
+      })
+      const entitiesRows = this.entities.map(e => ({
+        _name: e[0].name,
+        _entity: e[1]
+      }))
+      for (const entity of entitiesRows) {
+        for (const attribute of this.schemaAttributes) {
+          if (attribute[0] === 0) {
+            await yami.query(s => {
+              const {target, targetName} = s.var
+              s.findAll(attribute[2], entity._entity, target)
+              s.find1(signify, targetName, target)
+              s.collect((targetName, target) => {
+                entity[attribute[2].id] = targetName.name
+              })
+            })
+          } else {
+            await yami.query(s => {
+              const {target, targetName} = s.var
+              s.findAll(attribute[2], target, entity._entity)
+              s.find1(signify, targetName, target)
+              s.collect((targetName, target) => {
+                entity[attribute[2].id] = targetName.name
+              })
+            })
+          }
+        }
+      }
+      this.entitiesRows = entitiesRows
     }
   }
 }
