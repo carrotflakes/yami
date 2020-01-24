@@ -1,7 +1,9 @@
+use crate::pool::{StringPool, InternedString};
+
 #[derive(Debug, Clone, PartialEq)]
 pub enum Node {
     Symbol(u64),
-    String(String)
+    String(InternedString)
 }
 
 #[derive(Debug, Clone, PartialEq)]
@@ -9,14 +11,16 @@ pub struct Edge(pub Node, pub Node, pub Node);
 
 pub struct Store {
     edges: Vec<Edge>,
-    symbol_id: u64
+    symbol_id: u64,
+    string_pool: StringPool
 }
 
 impl Store {
     pub fn new() -> Store {
         Store {
             edges: Vec::new(),
-            symbol_id: 0
+            symbol_id: 0,
+            string_pool: StringPool::new()
         }
     }
 
@@ -25,8 +29,8 @@ impl Store {
         Node::Symbol(self.symbol_id)
     }
 
-    pub fn new_string(str: &str) -> Node {
-        Node::String(str.to_owned())
+    pub fn new_string(&mut self, str: &str) -> Node {
+        Node::String(self.string_pool.intern(str))
     }
 
     pub fn push(&mut self, edge: Edge) {
