@@ -75,7 +75,8 @@ pub enum Inst {
     Find(QNode, QNode, QNode, Box<Inst>),
     Add(QNode, QNode, QNode),
     Rm(QNode, QNode, QNode),
-    // Sym
+    Sym(Box<Inst>),
+    // GuardEq GuardNeq
     And(Box<Inst>, Box<Inst>),
     Print(usize)
 }
@@ -164,6 +165,11 @@ impl VM {
             Inst::Rm(qn0, qn1, qn2) => {
                 // TODO: enable variable?
                 self.store.remove(&Edge(self.resolve(qn0), self.resolve(qn1), self.resolve(qn2)));
+            }
+            Inst::Sym(then) => {
+                self.bindings.push(self.store.new_symbol());
+                self.run(then.as_ref());
+                self.bindings.pop();
             }
             Inst::And(left, right) => {
                 self.run(left.as_ref());

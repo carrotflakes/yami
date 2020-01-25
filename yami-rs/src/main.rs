@@ -42,6 +42,10 @@ impl<'a> Q<'a> {
         Inst::Rm(self.n(v[0]), self.n(v[1]), self.n(v[2]))
     }
     
+    fn sym(then: Inst) -> Inst {
+        Inst::Sym(Box::new(then))
+    }
+
     fn and(is: &[Inst]) -> Inst {
         let mut inst = is[0].clone();
         for i in 1..is.len() {
@@ -68,7 +72,7 @@ fn main() {
     let mut q = Q::new(&mut store);
     let inst = Q::and(&[
         q.add("a b c"),
-        q.add("a b :1"),
+        Q::sym(q.add("a b ?0")),
         q.add("x x d"),
         q.find(
             "a ? ?",
