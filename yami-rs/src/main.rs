@@ -1,5 +1,6 @@
 mod pool;
 mod core;
+mod script;
 use crate::core::{
     Node,
     Store,
@@ -59,8 +60,6 @@ impl<'a> Q<'a> {
     }
 }
 
-
-
 fn main() {
     let mut store = Store::new();
 
@@ -88,4 +87,24 @@ fn main() {
     ]);
     let mut vm = VM::new(store);
     vm.run(&inst);
+
+
+    let mut store = Store::new();
+    let mut reader = script::make_reader();
+    let ast = reader.parse(r#"
+    (and
+        (add "a" "b" "c")
+        (sym x
+            (add "a" "b" x))
+        (add "x" "x" "d")
+        (find "a" x y
+            (and
+                (print x)
+                (print y)))
+        (find x x y
+            (print y)))
+    "#).unwrap();
+    let inst = script::instize(&mut store, &mut std::default::Default::default(), ast);
+    println!("{:?}", inst);
+    VM::new(store).run(&inst);
 }

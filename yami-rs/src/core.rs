@@ -66,6 +66,7 @@ impl Store {
 #[derive(Debug, Clone)]
 pub enum QNode {
     Node(Node),
+    UninternedString(String),
     Variable,
     BoundVariable(usize)
 }
@@ -97,6 +98,9 @@ impl VM {
     pub fn run(&mut self, inst: &Inst) {
         match inst.clone() {
             Inst::Find(qn0, qn1, qn2, then) => {
+                let qn0 = self.ensure_intern(qn0);
+                let qn1 = self.ensure_intern(qn1);
+                let qn2 = self.ensure_intern(qn2);
                 let len = self.bindings.len();
                 let edges: Vec<Edge> = match (&qn0, &qn1, &qn2) {
                     (QNode::Node(n0), QNode::Node(n1), QNode::Node(n2)) => self.store.find_if(|edge| {
@@ -160,11 +164,17 @@ impl VM {
                 }
             }
             Inst::Add(qn0, qn1, qn2) => {
-                self.store.push(Edge(self.resolve(qn0), self.resolve(qn1), self.resolve(qn2)));
+                let n0 = self.resolve(qn0);
+                let n1 = self.resolve(qn1);
+                let n2 = self.resolve(qn2);
+                self.store.push(Edge(n0, n1, n2));
             }
             Inst::Rm(qn0, qn1, qn2) => {
                 // TODO: enable variable?
-                self.store.remove(&Edge(self.resolve(qn0), self.resolve(qn1), self.resolve(qn2)));
+                let n0 = self.resolve(qn0);
+                let n1 = self.resolve(qn1);
+                let n2 = self.resolve(qn2);
+                self.store.remove(&Edge(n0, n1, n2));
             }
             Inst::Sym(then) => {
                 self.bindings.push(self.store.new_symbol());
@@ -181,10 +191,19 @@ impl VM {
         }
     }
 
-    fn resolve(&self, qnode: QNode) -> Node {
-        match qnode {
+    fn ensure_intern(&mut self, qnode: QNode) -> QNode {
+        if let QNode::UninternedString(ref s) = qnode {
+            QNode::Node(self.store.new_string(s))
+        } else {
+            qnode
+        }
+    }
+
+    fn resolve(&mut self, qnode: QNode) -> Node {
+        match self.ensure_intern(qnode) {
             QNode::Node(n) => n,
-            QNode::Variable => panic!("cannot resolve for Inst::Variable"),
+            QNode::UninternedString(_) => panic!("cannot resolve for QNode::UninternedString"),
+            QNode::Variable => panic!("cannot resolve for QNode::Variable"),
             QNode::BoundVariable(i) => self.bindings[i].clone()
         }
     }
