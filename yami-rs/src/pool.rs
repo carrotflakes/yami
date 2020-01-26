@@ -15,6 +15,7 @@ impl StringPool {
         if let Some((v, _)) = self.0.get_key_value(&v) {
             v.clone()
         } else {
+            self.0.insert(v.clone(), ());
             v
         }
     }
