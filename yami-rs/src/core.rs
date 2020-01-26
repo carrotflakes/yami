@@ -77,7 +77,7 @@ pub enum Inst {
     Add(QNode, QNode, QNode),
     Rm(QNode, QNode, QNode),
     Sym(Box<Inst>),
-    // GuardEq GuardNeq
+    // GuardEq GuardNe
     And(Box<Inst>, Box<Inst>),
     Print(usize)
 }

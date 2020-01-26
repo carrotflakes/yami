@@ -27,6 +27,9 @@ fn atom_reader(sp: &mut StringPool, s: &str) -> Result<Val, String> {
     if s.starts_with("?") {
         return Ok(r(QNode::BoundVariable(s[1..].parse().unwrap())));
     }
+    if s.starts_with(":") {
+        return Ok(r(QNode::Node(Node::Symbol(s[1..].parse().unwrap()))));
+    }
     default_atom_reader(sp, s)
 }
 
@@ -132,6 +135,8 @@ fn qn(store: &mut Store, bindings: &mut (Vec<Symbol>, HashMap<Symbol, QNode>), v
             bindings.0.push(s.clone());
             QNode::Variable
         }
+    } else if let Some(qn) = val.borrow().downcast_ref::<QNode>() {
+        qn.clone()
     } else {
         panic!();
     }

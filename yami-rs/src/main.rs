@@ -94,6 +94,8 @@ fn main() {
     let ast = reader.parse(r#"
     (and
         (add "a" "b" "c")
+        (sym signify
+            (add signify "signify" signify))
         (sym x
             (add "a" "b" x))
         (add "x" "x" "d")
