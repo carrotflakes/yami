@@ -2,7 +2,6 @@ use std::collections::HashMap;
 use crate::core::{
     Node,
     Store,
-    VM,
     QNode,
     Inst
 };
@@ -77,22 +76,22 @@ pub fn instize(store: &mut Store, bindings: &mut (Vec<Symbol>, HashMap<Symbol, Q
                 "find" => {
                     let mut bindings = (bindings.0.clone(), bindings.1.clone());
                     Inst::Find(
-                        qn(store, &mut bindings, vec[1].clone()), 
-                        qn(store, &mut bindings, vec[2].clone()), 
-                        qn(store, &mut bindings, vec[3].clone()),
+                        qn(&mut bindings, vec[1].clone()), 
+                        qn(&mut bindings, vec[2].clone()), 
+                        qn(&mut bindings, vec[3].clone()),
                         Box::new(instize(store, &mut bindings, vec[4].clone())))
                 }
                 "add" => {
                     Inst::Add(
-                        qn(store, bindings, vec[1].clone()), 
-                        qn(store, bindings, vec[2].clone()), 
-                        qn(store, bindings, vec[3].clone()))
+                        qn(bindings, vec[1].clone()), 
+                        qn(bindings, vec[2].clone()), 
+                        qn(bindings, vec[3].clone()))
                 }
                 "rm" => {
                     Inst::Rm(
-                        qn(store, bindings, vec[1].clone()), 
-                        qn(store, bindings, vec[2].clone()), 
-                        qn(store, bindings, vec[3].clone()))
+                        qn(bindings, vec[1].clone()), 
+                        qn(bindings, vec[2].clone()), 
+                        qn(bindings, vec[3].clone()))
                 }
                 "sym" => {
                     let mut bindings = (bindings.0.clone(), bindings.1.clone());
@@ -109,7 +108,7 @@ pub fn instize(store: &mut Store, bindings: &mut (Vec<Symbol>, HashMap<Symbol, Q
                     inst
                 }
                 "print" => {
-                    if let QNode::BoundVariable(i) = qn(store, bindings, vec[1].clone()) {
+                    if let QNode::BoundVariable(i) = qn(bindings, vec[1].clone()) {
                         Inst::Print(i)
                     } else {
                         panic!();
@@ -124,7 +123,7 @@ pub fn instize(store: &mut Store, bindings: &mut (Vec<Symbol>, HashMap<Symbol, Q
     panic!("invalid ast!");
 }
 
-fn qn(store: &mut Store, bindings: &mut (Vec<Symbol>, HashMap<Symbol, QNode>), val: Val) -> QNode {
+fn qn(bindings: &mut (Vec<Symbol>, HashMap<Symbol, QNode>), val: Val) -> QNode {
     if let Some(s) = val.borrow().downcast_ref::<String>() {
         QNode::UninternedString(s.clone())
     } else if let Some(s) = val.borrow().downcast_ref::<Symbol>() {

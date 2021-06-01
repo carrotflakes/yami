@@ -8,3 +8,4 @@ edition = "2018"
 
 [dependencies]
 gluten = { git = "https://github.com/carrotflakes/gluten.git", branch = "master", version = "*" }
+serde_json = "1.0"

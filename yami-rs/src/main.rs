@@ -1,64 +1,8 @@
-mod pool;
-mod core;
-mod script;
-use crate::core::{
-    Node,
-    Store,
-    VM,
-    QNode,
-    Inst
+use yami::{
+    core::{Store, VM},
+    q::Q,
+    script,
 };
-
-struct Q<'a>(&'a mut Store);
-
-impl<'a> Q<'a> {
-    fn new(store: &'a mut Store) -> Q {
-        Q(store)
-    }
-
-    fn n(&mut self, str: &str) -> QNode {
-        if str == "?" {
-            QNode::Variable
-        } else if str.starts_with("?") {
-            QNode::BoundVariable(str[1..].parse().unwrap())
-        } else if str.starts_with(":") {
-            QNode::Node(Node::Symbol(str[1..].parse().unwrap()))
-        } else {
-            QNode::Node(self.0.new_string(str))
-        }
-    }
-
-    fn find(&mut self, str: &str, then: Inst) -> Inst {
-        let v: Vec<&str> = str.split(" ").collect();
-        Inst::Find(self.n(v[0]), self.n(v[1]), self.n(v[2]), Box::new(then))
-    }
-    
-    fn add(&mut self, str: &str) -> Inst {
-        let v: Vec<&str> = str.split(" ").collect();
-        Inst::Add(self.n(v[0]), self.n(v[1]), self.n(v[2]))
-    }
-    
-    fn rm(&mut self, str: &str) -> Inst {
-        let v: Vec<&str> = str.split(" ").collect();
-        Inst::Rm(self.n(v[0]), self.n(v[1]), self.n(v[2]))
-    }
-    
-    fn sym(then: Inst) -> Inst {
-        Inst::Sym(Box::new(then))
-    }
-
-    fn and(is: &[Inst]) -> Inst {
-        let mut inst = is[0].clone();
-        for i in 1..is.len() {
-            inst = Inst::And(Box::new(inst), Box::new(is[i].clone()));
-        }
-        inst
-    }
-    
-    fn print(i: usize) -> Inst {
-        Inst::Print(i)
-    }
-}
 
 fn main() {
     let mut store = Store::new();
@@ -73,25 +17,19 @@ fn main() {
         q.add("a b c"),
         Q::sym(q.add("a b ?0")),
         q.add("x x d"),
-        q.find(
-            "a ? ?",
-            Q::and(&[
-                Q::print(0),
-                Q::print(1)]
-            )
-        ),
-        q.find(
-            "? ?0 ?",
-            Q::print(1)
-        )
+        q.find("a ? ?", Q::and(&[Q::print(0), Q::print(1)])),
+        q.find("? ?0 ?", Q::print(1)),
     ]);
-    let mut vm = VM::new(store);
+    let mut vm = VM::new(&mut store);
     vm.run(&inst);
 
+    println!("===");
 
     let mut store = Store::new();
     let mut reader = script::make_reader();
-    let ast = reader.parse(r#"
+    let ast = reader
+        .parse(
+            r#"
     (and
         (add "a" "b" "c")
         (sym signify
@@ -105,8 +43,10 @@ fn main() {
                 (print y)))
         (find x x y
             (print y)))
-    "#).unwrap();
+    "#,
+        )
+        .unwrap();
     let inst = script::instize(&mut store, &mut std::default::Default::default(), ast);
     println!("{:?}", inst);
-    VM::new(store).run(&inst);
+    VM::new(&mut store).run(&inst);
 }
