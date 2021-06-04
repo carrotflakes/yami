@@ -143,7 +143,7 @@ impl<'a> VM<'a> {
                 self.run(right.as_ref());
             }
             Inst::Print(qn) => {
-                println!("{:?}", self.resolve(qn));
+                println!("{}", self.resolve(qn));
             }
         }
     }
@@ -162,6 +162,15 @@ impl<'a> VM<'a> {
             QNode::UninternedString(_) => unreachable!(),
             QNode::Variable => panic!("cannot resolve for QNode::Variable"),
             QNode::BoundVariable(i) => self.bindings[i].clone(),
+        }
+    }
+}
+
+impl std::fmt::Display for Node {
+    fn fmt(&self, f: &mut std::fmt::Formatter<'_>) -> std::fmt::Result {
+        match self {
+            Node::Symbol(i) => write!(f, ":{}", i),
+            Node::String(s) => write!(f, "{:?}", s),
         }
     }
 }
