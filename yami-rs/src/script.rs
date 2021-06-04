@@ -1,7 +1,6 @@
 use std::collections::HashMap;
 use crate::core::{
     Node,
-    Store,
     QNode,
     Inst
 };
@@ -69,7 +68,7 @@ pub fn make_reader() -> Reader {
 //     Some(val.borrow().downcast_ref::<T>()?.clone())
 // }
 
-pub fn instize(store: &mut Store, bindings: &mut (Vec<Symbol>, HashMap<Symbol, QNode>), ast: Val) -> Inst {
+pub fn instize(bindings: &mut (Vec<Symbol>, HashMap<Symbol, QNode>), ast: Val) -> Inst {
     if let Some(vec) = ast.borrow().downcast_ref::<Vec<Val>>() {
         if let Some(sym) = vec[0].borrow().downcast_ref::<Symbol>() {
             return match sym.0.as_str() {
@@ -79,7 +78,7 @@ pub fn instize(store: &mut Store, bindings: &mut (Vec<Symbol>, HashMap<Symbol, Q
                         qn(&mut bindings, vec[1].clone()), 
                         qn(&mut bindings, vec[2].clone()), 
                         qn(&mut bindings, vec[3].clone()),
-                        Box::new(instize(store, &mut bindings, vec[4].clone())))
+                        Box::new(instize(&mut bindings, vec[4].clone())))
                 }
                 "add" => {
                     Inst::Add(
@@ -99,12 +98,12 @@ pub fn instize(store: &mut Store, bindings: &mut (Vec<Symbol>, HashMap<Symbol, Q
                     // TODO: shdowing
                     bindings.1.insert(symbol.clone(), QNode::BoundVariable(bindings.0.len()));
                     bindings.0.push(symbol);
-                    Inst::Sym(Box::new(instize(store, &mut bindings, vec[2].clone())))
+                    Inst::Sym(Box::new(instize(&mut bindings, vec[2].clone())))
                 }
                 "and" => {
-                    let mut inst = instize(store, bindings, vec[1].clone());
+                    let mut inst = instize(bindings, vec[1].clone());
                     for i in 2..vec.len() {
-                        inst = Inst::And(Box::new(inst), Box::new(instize(store, bindings, vec[i].clone())));
+                        inst = Inst::And(Box::new(inst), Box::new(instize(bindings, vec[i].clone())));
                     }
                     inst
                 }

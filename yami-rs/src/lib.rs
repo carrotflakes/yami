@@ -15,7 +15,7 @@ pub fn interact(store: &mut store::Store) {
             break;
         }
         let ast = reader.parse(&buf).unwrap();
-        let inst = script::instize(store, &mut Default::default(), ast);
+        let inst = script::instize(&mut Default::default(), ast);
 
         VM::new(store).run(&inst);
 

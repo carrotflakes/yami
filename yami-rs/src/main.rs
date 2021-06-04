@@ -47,7 +47,7 @@ fn main() {
             )"#,
             )
             .unwrap();
-        let inst = script::instize(&mut store, &mut Default::default(), ast);
+        let inst = script::instize(&mut Default::default(), ast);
         println!("{:?}", inst);
         VM::new(&mut store).run(&inst);
     }
@@ -76,7 +76,7 @@ fn main() {
         )};
         let ast = script::make_reader().parse(code).unwrap();
         let mut store = Store::new();
-        let inst = script::instize(&mut store, &mut Default::default(), ast);
+        let inst = script::instize(&mut Default::default(), ast);
         VM::new(&mut store).run(&inst);
     }
 }
