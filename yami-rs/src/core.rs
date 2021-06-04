@@ -26,7 +26,7 @@ pub enum Inst {
     Sym(Box<Inst>),
     // GuardEq GuardNe
     And(Box<Inst>, Box<Inst>),
-    Print(usize),
+    Print(QNode),
 }
 
 pub struct VM<'a> {
@@ -142,8 +142,8 @@ impl<'a> VM<'a> {
                 self.run(left.as_ref());
                 self.run(right.as_ref());
             }
-            Inst::Print(i) => {
-                println!("{:?}", self.bindings[i]);
+            Inst::Print(qn) => {
+                println!("{:?}", self.resolve(qn));
             }
         }
     }
@@ -159,7 +159,7 @@ impl<'a> VM<'a> {
     fn resolve(&mut self, qnode: QNode) -> Node {
         match self.ensure_intern(qnode) {
             QNode::Node(n) => n,
-            QNode::UninternedString(_) => panic!("cannot resolve for QNode::UninternedString"),
+            QNode::UninternedString(_) => unreachable!(),
             QNode::Variable => panic!("cannot resolve for QNode::Variable"),
             QNode::BoundVariable(i) => self.bindings[i].clone(),
         }

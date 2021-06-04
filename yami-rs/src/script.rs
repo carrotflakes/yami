@@ -74,7 +74,7 @@ pub fn instize(store: &mut Store, bindings: &mut (Vec<Symbol>, HashMap<Symbol, Q
         if let Some(sym) = vec[0].borrow().downcast_ref::<Symbol>() {
             return match sym.0.as_str() {
                 "find" => {
-                    let mut bindings = (bindings.0.clone(), bindings.1.clone());
+                    let mut bindings = bindings.clone();
                     Inst::Find(
                         qn(&mut bindings, vec[1].clone()), 
                         qn(&mut bindings, vec[2].clone()), 
@@ -94,7 +94,7 @@ pub fn instize(store: &mut Store, bindings: &mut (Vec<Symbol>, HashMap<Symbol, Q
                         qn(bindings, vec[3].clone()))
                 }
                 "sym" => {
-                    let mut bindings = (bindings.0.clone(), bindings.1.clone());
+                    let mut bindings = bindings.clone();
                     let symbol = vec[1].borrow().downcast_ref::<Symbol>().unwrap().clone();
                     // TODO: shdowing
                     bindings.1.insert(symbol, QNode::Node(store.new_symbol()));
@@ -108,11 +108,7 @@ pub fn instize(store: &mut Store, bindings: &mut (Vec<Symbol>, HashMap<Symbol, Q
                     inst
                 }
                 "print" => {
-                    if let QNode::BoundVariable(i) = qn(bindings, vec[1].clone()) {
-                        Inst::Print(i)
-                    } else {
-                        panic!();
-                    }
+                    Inst::Print(qn(bindings, vec[1].clone()))
                 }
                 _ => {
                     panic!("what: {:?}", sym);

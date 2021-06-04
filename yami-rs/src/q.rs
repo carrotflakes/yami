@@ -46,6 +46,6 @@ impl<'a> Q<'a> {
     }
 
     pub fn print(i: usize) -> Inst {
-        Inst::Print(i)
+        Inst::Print(QNode::BoundVariable(i))
     }
 }
