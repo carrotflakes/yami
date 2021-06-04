@@ -56,7 +56,13 @@ fn main() {
         let code = stringify! {
         (and
             (sym signify
-                (add signify "signify" signify))
+                (and
+                    (add signify "signify" signify)
+                    (sym hoge
+                        (add signify "hoge" hoge))
+                    (find signify x y
+                        (and (print x) (print y)))
+            ))
             (add "a" "b" "c")
             (sym x
                 (add "a" "b" x))

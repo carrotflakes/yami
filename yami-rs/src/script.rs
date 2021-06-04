@@ -97,7 +97,8 @@ pub fn instize(store: &mut Store, bindings: &mut (Vec<Symbol>, HashMap<Symbol, Q
                     let mut bindings = bindings.clone();
                     let symbol = vec[1].borrow().downcast_ref::<Symbol>().unwrap().clone();
                     // TODO: shdowing
-                    bindings.1.insert(symbol, QNode::Node(store.new_symbol()));
+                    bindings.1.insert(symbol.clone(), QNode::BoundVariable(bindings.0.len()));
+                    bindings.0.push(symbol);
                     Inst::Sym(Box::new(instize(store, &mut bindings, vec[2].clone())))
                 }
                 "and" => {
