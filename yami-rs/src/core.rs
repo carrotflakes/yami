@@ -23,7 +23,7 @@ pub enum Inst {
     Find(QNode, QNode, QNode, Box<Inst>),
     Add(QNode, QNode, QNode),
     Rm(QNode, QNode, QNode),
-    Sym(Box<Inst>),
+    Sym(usize, Box<Inst>),
     // GuardEq GuardNe
     And(Box<Inst>, Box<Inst>),
     Print(QNode),
@@ -133,10 +133,14 @@ impl<'a> VM<'a> {
                 let n2 = self.resolve(qn2);
                 self.store.remove(&Edge(n0, n1, n2));
             }
-            Inst::Sym(then) => {
-                self.bindings.push(self.store.new_symbol());
+            Inst::Sym(symbol_num, then) => {
+                for _ in 0..symbol_num {
+                    self.bindings.push(self.store.new_symbol());
+                }
                 self.run(then.as_ref());
-                self.bindings.pop();
+                for _ in 0..symbol_num {
+                    self.bindings.pop();
+                }
             }
             Inst::And(left, right) => {
                 self.run(left.as_ref());

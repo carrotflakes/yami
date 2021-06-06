@@ -34,7 +34,7 @@ impl<'a> Q<'a> {
     }
 
     pub fn sym(then: Inst) -> Inst {
-        Inst::Sym(Box::new(then))
+        Inst::Sym(1, Box::new(then))
     }
 
     pub fn and(is: &[Inst]) -> Inst {

@@ -55,13 +55,24 @@ fn main() {
     {
         let code = stringify! {
         (and
-            (sym signify
+            (sym (signify is_a programming_language rust go python)
                 (and
                     (add signify "signify" signify)
-                    (sym hoge
-                        (add signify "hoge" hoge))
+                    (add signify "programming_language" programming_language)
+                    (add signify "is-a" is_a)
+                    (add signify "rust" rust)
+                    (add signify "go" go)
+                    (add signify "python" python)
+                    (add is_a rust programming_language)
+                    (add is_a go programming_language)
+                    (add is_a python programming_language)
                     (find signify x y
                         (and (print x) (print y)))
+                    (print "lookup programming language:")
+                    (find signify "programming_language" p
+                        (find is_a x p
+                            (find signify name x
+                                (print name))))
             ))
             (add "a" "b" "c")
             (sym x

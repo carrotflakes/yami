@@ -1,16 +1,8 @@
-use std::collections::HashMap;
-use crate::core::{
-    Node,
-    QNode,
-    Inst
-};
+use crate::core::{Inst, Node, QNode};
 pub use gluten::{
-    R, Val, r, Symbol, MyFn,
-    Reader,
-    reader::default_atom_reader,
-    eval, Env,
-    StringPool
+    eval, r, reader::default_atom_reader, Env, MyFn, Reader, StringPool, Symbol, Val, R,
 };
+use std::collections::HashMap;
 
 fn atom_reader(sp: &mut StringPool, s: &str) -> Result<Val, String> {
     if let Ok(v) = s.parse::<i32>() {
@@ -75,45 +67,65 @@ pub fn instize(bindings: &mut (Vec<Symbol>, HashMap<Symbol, QNode>), ast: Val) -
                 "find" => {
                     let mut bindings = bindings.clone();
                     Inst::Find(
-                        qn(&mut bindings, vec[1].clone()), 
-                        qn(&mut bindings, vec[2].clone()), 
+                        qn(&mut bindings, vec[1].clone()),
+                        qn(&mut bindings, vec[2].clone()),
                         qn(&mut bindings, vec[3].clone()),
-                        Box::new(instize(&mut bindings, vec[4].clone())))
+                        Box::new(instize(&mut bindings, vec[4].clone())),
+                    )
                 }
-                "add" => {
-                    Inst::Add(
-                        qn(bindings, vec[1].clone()), 
-                        qn(bindings, vec[2].clone()), 
-                        qn(bindings, vec[3].clone()))
-                }
-                "rm" => {
-                    Inst::Rm(
-                        qn(bindings, vec[1].clone()), 
-                        qn(bindings, vec[2].clone()), 
-                        qn(bindings, vec[3].clone()))
-                }
+                "add" => Inst::Add(
+                    qn(bindings, vec[1].clone()),
+                    qn(bindings, vec[2].clone()),
+                    qn(bindings, vec[3].clone()),
+                ),
+                "rm" => Inst::Rm(
+                    qn(bindings, vec[1].clone()),
+                    qn(bindings, vec[2].clone()),
+                    qn(bindings, vec[3].clone()),
+                ),
                 "sym" => {
-                    let mut bindings = bindings.clone();
-                    let symbol = vec[1].borrow().downcast_ref::<Symbol>().unwrap().clone();
                     // TODO: shdowing
-                    bindings.1.insert(symbol.clone(), QNode::BoundVariable(bindings.0.len()));
-                    bindings.0.push(symbol);
-                    Inst::Sym(Box::new(instize(&mut bindings, vec[2].clone())))
+                    let mut bindings = bindings.clone();
+                    if let Some(symbol) = vec[1].borrow().downcast_ref::<Symbol>() {
+                        let symbol = symbol.clone();
+
+                        bindings
+                            .1
+                            .insert(symbol.clone(), QNode::BoundVariable(bindings.0.len()));
+                        bindings.0.push(symbol);
+                        Inst::Sym(1, Box::new(instize(&mut bindings, vec[2].clone())))
+                    } else if let Some(symbols) = vec[1].borrow().downcast_ref::<Vec<Val>>() {
+                        let symbols = symbols
+                            .iter()
+                            .map(|x| x.borrow().downcast_ref::<Symbol>().cloned())
+                            .collect::<Option<Vec<Symbol>>>()
+                            .unwrap();
+
+                        let n = symbols.len();
+                        for symbol in symbols.into_iter() {
+                            bindings
+                                .1
+                                .insert(symbol.clone(), QNode::BoundVariable(bindings.0.len()));
+                            bindings.0.push(symbol);
+                        }
+                        Inst::Sym(n, Box::new(instize(&mut bindings, vec[2].clone())))
+                    } else {
+                        panic!()
+                    }
                 }
                 "and" => {
                     let mut inst = instize(bindings, vec[1].clone());
                     for i in 2..vec.len() {
-                        inst = Inst::And(Box::new(inst), Box::new(instize(bindings, vec[i].clone())));
+                        inst =
+                            Inst::And(Box::new(inst), Box::new(instize(bindings, vec[i].clone())));
                     }
                     inst
                 }
-                "print" => {
-                    Inst::Print(qn(bindings, vec[1].clone()))
-                }
+                "print" => Inst::Print(qn(bindings, vec[1].clone())),
                 _ => {
                     panic!("what: {:?}", sym);
                 }
-            }
+            };
         }
     }
     panic!("invalid ast!");
@@ -126,7 +138,9 @@ fn qn(bindings: &mut (Vec<Symbol>, HashMap<Symbol, QNode>), val: Val) -> QNode {
         if let Some(qn) = bindings.1.get(&s) {
             qn.clone()
         } else {
-            bindings.1.insert(s.clone(), QNode::BoundVariable(bindings.0.len()));
+            bindings
+                .1
+                .insert(s.clone(), QNode::BoundVariable(bindings.0.len()));
             bindings.0.push(s.clone());
             QNode::Variable
         }
