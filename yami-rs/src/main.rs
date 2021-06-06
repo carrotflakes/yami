@@ -5,6 +5,7 @@ use yami::{
 };
 
 fn main() {
+    let output_fn = &mut |n| println!("{}", n);
     {
         let mut store = Store::new();
 
@@ -21,7 +22,7 @@ fn main() {
             q.find("a ? ?", Q::and(&[Q::print(0), Q::print(1)])),
             q.find("? ?0 ?", Q::print(1)),
         ]);
-        let mut vm = VM::new(&mut store);
+        let mut vm = VM::new(&mut store, output_fn);
         vm.run(&inst);
     }
     println!("===");
@@ -49,7 +50,7 @@ fn main() {
             .unwrap();
         let inst = script::instize(&mut Default::default(), ast);
         println!("{:?}", inst);
-        VM::new(&mut store).run(&inst);
+        VM::new(&mut store, output_fn).run(&inst);
     }
     println!("===");
     {
@@ -88,6 +89,6 @@ fn main() {
         let ast = script::make_reader().parse(code).unwrap();
         let mut store = Store::new();
         let inst = script::instize(&mut Default::default(), ast);
-        VM::new(&mut store).run(&inst);
+        VM::new(&mut store, output_fn).run(&inst);
     }
 }

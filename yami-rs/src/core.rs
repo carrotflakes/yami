@@ -29,16 +29,18 @@ pub enum Inst {
     Print(QNode),
 }
 
-pub struct VM<'a> {
+pub struct VM<'a, F: FnMut(Node)> {
     store: &'a mut Store,
     bindings: Vec<Node>,
+    output_fn: &'a mut F,
 }
 
-impl<'a> VM<'a> {
-    pub fn new(store: &'a mut Store) -> Self {
+impl<'a, F: FnMut(Node)> VM<'a, F> {
+    pub fn new(store: &'a mut Store, output_fn: &'a mut F) -> Self {
         VM {
             store,
             bindings: Vec::new(),
+            output_fn,
         }
     }
 
@@ -147,7 +149,8 @@ impl<'a> VM<'a> {
                 self.run(right.as_ref());
             }
             Inst::Print(qn) => {
-                println!("{}", self.resolve(qn));
+                let node = self.resolve(qn);
+                (self.output_fn)(node);
             }
         }
     }
