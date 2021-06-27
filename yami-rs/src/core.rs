@@ -1,4 +1,4 @@
-use crate::pool::InternedString;
+use crate::{pool::InternedString, store::FormattableNode};
 pub use crate::store::Store;
 
 #[derive(Debug, Clone, PartialEq)]
@@ -29,13 +29,13 @@ pub enum Inst {
     Print(QNode),
 }
 
-pub struct VM<'a, F: FnMut(Node)> {
+pub struct VM<'a, F: for <'b> FnMut(FormattableNode<'b>)> {
     store: &'a mut Store,
     bindings: Vec<Node>,
     output_fn: &'a mut F,
 }
 
-impl<'a, F: FnMut(Node)> VM<'a, F> {
+impl<'a, F: for <'b> FnMut(FormattableNode<'b>)> VM<'a, F> {
     pub fn new(store: &'a mut Store, output_fn: &'a mut F) -> Self {
         VM {
             store,
@@ -150,7 +150,7 @@ impl<'a, F: FnMut(Node)> VM<'a, F> {
             }
             Inst::Print(qn) => {
                 let node = self.resolve(qn);
-                (self.output_fn)(node);
+                (self.output_fn)(self.store.formattable_node(&node));
             }
         }
     }

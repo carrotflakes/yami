@@ -1,22 +1,34 @@
-use std::collections::HashMap;
-use std::rc::Rc;
+#[derive(Debug)]
+pub struct StringPool {
+    strings: Vec<String>,
+}
 
-pub struct StringPool(HashMap<Rc<String>, ()>);
-
-pub type InternedString = Rc<String>;
+#[derive(Debug, Clone, Copy, PartialEq, Eq)]
+pub struct InternedString(*const u8);
 
 impl StringPool {
     pub fn new() -> StringPool {
-        StringPool(HashMap::new())
-    }
-
-    pub fn intern(&mut self, str: &str) -> Rc<String> {
-        let v = Rc::new(str.to_string());
-        if let Some((v, _)) = self.0.get_key_value(&v) {
-            v.clone()
-        } else {
-            self.0.insert(v.clone(), ());
-            v
+        StringPool {
+            strings: Vec::new(),
         }
     }
+
+    pub fn intern(&mut self, str: &str) -> InternedString {
+        if let Some(i) = self.strings.iter().position(|x| *x == str) {
+            InternedString(self.strings[i].as_str().as_ptr())
+        } else {
+            self.strings.push(str.to_string());
+            InternedString(self.strings.last().unwrap().as_str().as_ptr())
+        }
+    }
+
+    pub fn get(&self, is: InternedString) -> &String {
+        self.strings
+            .iter()
+            .find(|x| x.as_str().as_ptr() == is.0)
+            .unwrap()
+    }
 }
+
+unsafe impl Send for InternedString {}
+unsafe impl Sync for InternedString {}

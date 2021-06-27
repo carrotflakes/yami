@@ -2,10 +2,11 @@ use yami::{
     core::{Store, VM},
     q::Q,
     script,
+    store::FormattableNode,
 };
 
 fn main() {
-    let output_fn = &mut |n| println!("{}", n);
+    let output_fn = &mut |n: FormattableNode| println!("{}", n);
     {
         let mut store = Store::new();
 

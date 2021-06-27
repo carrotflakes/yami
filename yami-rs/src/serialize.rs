@@ -19,7 +19,7 @@ pub fn write(store: &Store, writer: &mut impl Write) -> Result<(), std::io::Erro
 
     writeln!(writer, "{:?}", strings.len())?;
     for string in &strings {
-        writeln!(writer, "{}", serde_json::Value::String(string.to_string()))?;
+        writeln!(writer, "{}", serde_json::Value::String(store.get_string(*string).to_owned()))?;
     }
 
     let offset = strings.len() as u64;

@@ -1,4 +1,4 @@
-use crate::{core::{Edge, Node}, pool::StringPool};
+use crate::{core::{Edge, Node}, pool::{InternedString, StringPool}};
 
 pub struct Store {
     edges: Vec<Edge>,
@@ -31,6 +31,10 @@ impl Store {
         Node::String(self.string_pool.intern(str))
     }
 
+    pub fn get_string(&self, is: InternedString) -> &str {
+        self.string_pool.get(is)
+    }
+
     pub fn push(&mut self, edge: Edge) {
         if !self.contains(&edge) { 
             self.edges.push(edge);
@@ -51,6 +55,10 @@ impl Store {
             println!("{:?}", edge);
         }
     }
+
+    pub fn formattable_node<'a>(&'a self, node: &'a Node) -> FormattableNode<'a> {
+        FormattableNode(self, node)
+    }
     
     pub fn contains(&self, edge: &Edge) -> bool {
         self.edges.contains(edge)
@@ -62,5 +70,24 @@ impl Store {
 
     pub fn edges_ref(&self) -> &[Edge] {
         &self.edges
+    }
+}
+
+pub struct FormattableNode<'a>(&'a Store, &'a Node);
+
+impl<'a> std::fmt::Display for FormattableNode<'a> {
+    fn fmt(&self, f: &mut std::fmt::Formatter<'_>) -> std::fmt::Result {
+        match &self.1 {
+            Node::Symbol(i) => write!(f, ":{}", i),
+            Node::String(is) => write!(f, "{:?}", self.0.string_pool.get(*is)),
+        }
+    }
+}
+
+impl<'a> std::ops::Deref for FormattableNode<'a> {
+    type Target = &'a Node;
+
+    fn deref(&self) -> &Self::Target {
+        &self.1
     }
 }
