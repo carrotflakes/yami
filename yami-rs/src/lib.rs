@@ -1,6 +1,7 @@
 use crate::core::VM;
 
 pub mod core;
+pub mod json;
 mod pool;
 pub mod q;
 pub mod script;
