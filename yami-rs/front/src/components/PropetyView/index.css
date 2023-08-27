@@ -1,0 +1,39 @@
+.table {
+    background: #eee;
+    width: 360px;
+    margin: auto;
+    border-spacing: 0;
+}
+
+.table > thead {
+    color: #666;
+}
+
+.table td {
+    padding: 3px;
+}
+
+.addButton {
+    cursor: pointer;
+}
+
+.table > tbody td:hover {
+    background: #ddd;
+}
+
+.contextMenu {
+    padding: 2px;
+    min-height: 10px;
+    background: #111;
+    position: absolute;
+    color: #fff;
+    cursor: pointer;
+}
+
+.contextMenu > div {
+    padding: 3px;
+}
+
+.contextMenu > div:hover {
+    background: #444;
+}

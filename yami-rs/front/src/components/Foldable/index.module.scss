@@ -1,0 +1,16 @@
+.foldable {
+  .header {
+    text-align: left;
+    color: #666;
+    cursor: pointer;
+
+    &[data-open="false"] {
+      writing-mode: vertical-rl;
+    }
+
+    .title {
+      font-size: 1.25rem;
+      font-weight: bold;
+    }
+  }
+}
