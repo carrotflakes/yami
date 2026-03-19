@@ -2,7 +2,7 @@ use crate::core::{Inst, Node, QNode, Store};
 pub struct Q<'a>(&'a mut Store);
 
 impl<'a> Q<'a> {
-    pub fn new(store: &'a mut Store) -> Q {
+    pub fn new(store: &'a mut Store) -> Self {
         Q(store)
     }
 
